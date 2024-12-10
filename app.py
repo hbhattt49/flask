@@ -1,13 +1,26 @@
-@app.route('/home')
-def home():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-    
-    # Run scripts and get results
-    abc_result = subprocess.run(['bash', './abc.sh'], capture_output=True, text=True).stdout
-    xyz_result = subprocess.run(['bash', './xyz.sh'], capture_output=True, text=True).stdout
-    
-    # Placeholder or logic for Index result
-    index_result = "Index tile content here."
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %} My Website {% endblock %}</title>
+    <!-- Add your CSS/JS links here -->
+</head>
+<body>
+    <!-- Navigation Pane -->
+    <nav>
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/contact">Contact</a></li>
+        </ul>
+    </nav>
 
-    return render_template('home.html', abc_result=abc_result, xyz_result=xyz_result, index_result=index_result)
+    <!-- Main Content -->
+    <div class="content">
+        {% block content %}
+        <!-- Content from child templates will go here -->
+        {% endblock %}
+    </div>
+</body>
+</html>

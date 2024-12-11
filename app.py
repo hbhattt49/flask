@@ -1,66 +1,37 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
-import subprocess
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pod Manager</title>
+</head>
+<body>
+    <h1>Welcome, {{ username }}</h1>
+    <form id="deploy-form" method="POST" action="/deploy">
+        <button type="submit">Deploy</button>
+    </form>
+    <button id="status-btn">Check Status</button>
+    <a href="/logout">Logout</a>
+    <pre id="output"></pre>
+    <script>
+        const form = document.getElementById('deploy-form');
+        const statusBtn = document.getElementById('status-btn');
+        const output = document.getElementById('output');
 
-app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const response = await fetch('/deploy', {
+                method: 'POST',
+            });
+            const result = await response.json();
+            output.textContent = JSON.stringify(result, null, 2);
+        });
 
-# Dummy LDAP authentication function
-def ldap_authenticate(username, password):
-    # Replace this with actual LDAP authentication logic
-    return username == "admin" and password == "password"
-
-@app.route('/')
-def login():
-    if 'username' in session:
-        return redirect(url_for('index'))
-    return render_template('login.html')
-
-@app.route('/login', methods=['POST'])
-def login_post():
-    username = request.form.get('username')
-    password = request.form.get('password')
-
-    if ldap_authenticate(username, password):
-        session['username'] = username
-        return redirect(url_for('index'))
-    else:
-        return render_template('login.html', error="Invalid credentials")
-
-@app.route('/logout')
-def logout():
-    session.pop('username', None)
-    return redirect(url_for('login'))
-
-@app.route('/index')
-def index():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-    return render_template('index.html', username=session['username'])
-
-@app.route('/deploy', methods=['POST'])
-def deploy():
-    username = session.get('username')
-    if not username:
-        return jsonify({"error": "User not authenticated"}), 401
-
-    try:
-        # Call deploy.sh script with username
-        result = subprocess.run(['./deploy.sh', username], capture_output=True, text=True, check=True)
-        return jsonify({"message": "Deployment successful", "output": result.stdout})
-    except subprocess.CalledProcessError as e:
-        return jsonify({"error": "Deployment failed", "details": e.stderr}), 500
-
-@app.route('/status', methods=['GET'])
-def status():
-    if 'username' not in session:
-        return jsonify({"error": "User not authenticated"}), 401
-
-    try:
-        # Call status.sh script
-        result = subprocess.run(['./status.sh'], capture_output=True, text=True, check=True)
-        return jsonify({"message": "Status retrieved successfully", "output": result.stdout})
-    except subprocess.CalledProcessError as e:
-        return jsonify({"error": "Failed to retrieve status", "details": e.stderr}), 500
-
-if __name__ == '__main__':
-    app.run(debug=True)
+        statusBtn.addEventListener('click', async () => {
+            const response = await fetch('/status');
+            const result = await response.json();
+            output.textContent = JSON.stringify(result, null, 2);
+        });
+    </script>
+</body>
+</html>

@@ -1,79 +1,82 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
-import subprocess
-
-app = Flask(__name__)
-app.secret_key = 'your_secret_key'
-
-# Dummy LDAP authentication function
-def ldap_authenticate(username, password):
-    # Replace this with actual LDAP authentication logic
-    return username == "admin" and password == "password"
-
-@app.route('/')
-def login():
-    if 'username' in session:
-        return redirect(url_for('index'))
-    return render_template('login.html')
-
-@app.route('/login', methods=['POST'])
-def login_post():
-    username = request.form.get('username')
-    password = request.form.get('password')
-
-    if ldap_authenticate(username, password):
-        session['username'] = username
-        return redirect(url_for('index'))
-    else:
-        return render_template('login.html', error="Invalid credentials")
-
-@app.route('/logout')
-def logout():
-    session.pop('username', None)
-    return redirect(url_for('login'))
-
-@app.route('/index')
-def index():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-    return render_template('index.html', username=session['username'])
-
-@app.route('/deploy', methods=['POST'])
-def deploy():
-    username = session.get('username')
-    if not username:
-        return jsonify({"error": "User not authenticated"}), 401
-
-    try:
-        # Call deploy.sh script with username
-        result = subprocess.run(['./deploy.sh', username], capture_output=True, text=True, check=True)
-        return jsonify({"message": "Deployment successful", "output": result.stdout})
-    except subprocess.CalledProcessError as e:
-        return jsonify({"error": "Deployment failed", "details": e.stderr}), 500
-
-@app.route('/status', methods=['GET'])
-def status():
-    if 'username' not in session:
-        return jsonify({"error": "User not authenticated"}), 401
-
-    try:
-        # Call status.sh script
-        result = subprocess.run(['./status.sh'], capture_output=True, text=True, check=True)
-        return jsonify({"message": "Status retrieved successfully", "output": result.stdout})
-    except subprocess.CalledProcessError as e:
-        return jsonify({"error": "Failed to retrieve status", "details": e.stderr}), 500
-
-@app.route('/launch', methods=['GET'])
-def launch():
-    if 'username' not in session:
-        return jsonify({"error": "User not authenticated"}), 401
-
-    try:
-        # Call retrieve_url.sh script
-        result = subprocess.run(['./retrieve_url.sh'], capture_output=True, text=True, check=True)
-        url = result.stdout.strip()
-        return render_template('launch.html', url=url)
-    except subprocess.CalledProcessError as e:
-        return jsonify({"error": "Failed to retrieve URL", "details": e.stderr}), 500
-
-if __name__ == '__main__':
-    app.run(debug=True)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f9;
+        }
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .login-container h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #333;
+        }
+        .login-container label {
+            display: block;
+            margin: 10px 0 5px;
+            font-size: 14px;
+            text-align: left;
+        }
+        .login-container input, .login-container select, .login-container button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .login-container button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .login-container button:hover {
+            background-color: #45a049;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Login</h1>
+        <form method="POST" action="/login">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+            
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            
+            <label for="lob">Select LOB:</label>
+            <select id="lob" name="lob" required>
+                <option value="LOB1">LOB1</option>
+                <option value="LOB2">LOB2</option>
+                <option value="LOB3">LOB3</option>
+            </select>
+            
+            <button type="submit">Login</button>
+        </form>
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+    </div>
+</body>
+</html>

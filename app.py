@@ -1,71 +1,84 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session, Response
-import subprocess
+{% extends "base.html" %}
 
-app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+{% block title %}Home{% endblock %}
 
-# Dummy LDAP authentication function
-def ldap_authenticate(username, password, lob):
-    # Replace this with actual LDAP authentication logic
-    valid_users = {
-        "LOB1": {"admin": "password1"},
-        "LOB2": {"user": "password2"},
-        "LOB3": {"manager": "password3"},
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
+    <div style="flex: 1; margin-right: 20px;">
+        <h1>Welcome, {{ username }}</h1>
+        <p>You are logged in under the LOB: {{ lob }}</p>
+
+        <h2>Deployment Logs</h2>
+        <button id="deploy-btn">Deploy</button>
+        <textarea id="deploy-output" readonly style="width: 100%; height: 300px; margin-top: 10px;"></textarea>
+    </div>
+
+    <div id="status-widget-container" style="width: 120px;">
+        <h2>Status Widget</h2>
+        <div id="status-widget"
+             style="width: 100px; height: 100px; border-radius: 10px; text-align: center; line-height: 100px; font-weight: bold; color: white; background-color: gray;">
+            Loading...
+        </div>
+    </div>
+</div>
+
+<script>
+    const statusWidget = document.getElementById('status-widget');
+
+    // Function to update the status widget color and behavior
+    async function updateStatusWidget() {
+        try {
+            const response = await fetch('/status_check');
+            const data = await response.json();
+
+            if (data.status) {
+                // Green for true status
+                statusWidget.style.backgroundColor = 'green';
+                statusWidget.textContent = 'Healthy';
+                statusWidget.onclick = null; // Disable clicking
+            } else {
+                // Red for false status
+                statusWidget.style.backgroundColor = 'red';
+                statusWidget.textContent = 'Setup Needed';
+                statusWidget.onclick = async () => {
+                    statusWidget.textContent = 'Setting up...';
+                    try {
+                        const setupResponse = await fetch('/one_time_setup', { method: 'POST' });
+                        const setupData = await setupResponse.json();
+                        if (setupData.message) {
+                            alert(setupData.message);
+                            updateStatusWidget(); // Recheck the status after setup
+                        } else {
+                            alert('Setup failed: ' + setupData.error);
+                        }
+                    } catch (err) {
+                        alert('Error executing setup.');
+                    }
+                };
+            }
+        } catch (err) {
+            statusWidget.style.backgroundColor = 'gray';
+            statusWidget.textContent = 'Error';
+        }
     }
-    return valid_users.get(lob, {}).get(username) == password
 
-@app.route('/')
-def login():
-    if 'username' in session:
-        return redirect(url_for('index'))
-    return render_template('login.html')
+    // Call the update function on page load
+    updateStatusWidget();
 
-@app.route('/login', methods=['POST'])
-def login_post():
-    username = request.form.get('username')
-    password = request.form.get('password')
-    lob = request.form.get('lob')
+    // Deploy button logic
+    document.getElementById('deploy-btn').addEventListener('click', () => {
+        const outputBox = document.getElementById('deploy-output');
+        outputBox.value = ''; // Clear previous output
 
-    if not username or not password or not lob:
-        return render_template('login.html', error="All fields are required")
-
-    if ldap_authenticate(username, password, lob):
-        session['username'] = username
-        session['lob'] = lob
-        return redirect(url_for('index'))
-    else:
-        return render_template('login.html', error="Invalid credentials or LOB")
-
-@app.route('/logout')
-def logout():
-    session.pop('username', None)
-    session.pop('lob', None)
-    return redirect(url_for('login'))
-
-@app.route('/index')
-def index():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-    return render_template('index.html', username=session['username'], lob=session['lob'])
-
-@app.route('/status_check', methods=['GET'])
-def status_check():
-    try:
-        # Call status.sh script
-        result = subprocess.run(['./status.sh'], capture_output=True, text=True, check=True)
-        status = result.stdout.strip().lower() == 'true'
-        return jsonify({"status": status})
-    except subprocess.CalledProcessError as e:
-        return jsonify({"error": "Failed to retrieve status", "details": e.stderr}), 500
-
-@app.route('/one_time_setup', methods=['POST'])
-def one_time_setup():
-    try:
-        # Call one_time_setup.sh script
-        result = subprocess.run(['./one_time_setup.sh'], capture_output=True, text=True, check=True)
-        return jsonify({"message": "Setup complete"})
-    except subprocess.CalledProcessError as e:
-        return jsonify({"error": "Setup failed", "details": e.stderr}), 500
-
-if __name__ == '__main__':
-    app.run(debug=True)
+        const eventSource = new EventSource('/deploy');
+        eventSource.onmessage = (event) => {
+            outputBox.value += event.data + '\\n'; // Append new data to the output box
+            outputBox.scrollTop = outputBox.scrollHeight; // Scroll to the bottom
+        };
+        eventSource.onerror = () => {
+            outputBox.value += '\\n[ERROR] Connection to the server lost.';
+            eventSource.close();
+        };
+    });
+</script>
+{% endblock %}

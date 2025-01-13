@@ -1,84 +1,53 @@
-{% extends "base.html" %}
-
-{% block title %}Home{% endblock %}
-
-{% block content %}
-<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
-    <div style="flex: 1; margin-right: 20px;">
-        <h1>Welcome, {{ username }}</h1>
-        <p>You are logged in under the LOB: {{ lob }}</p>
-
-        <h2>Deployment Logs</h2>
-        <button id="deploy-btn">Deploy</button>
-        <textarea id="deploy-output" readonly style="width: 100%; height: 300px; margin-top: 10px;"></textarea>
-    </div>
-
-    <div id="status-widget-container" style="width: 120px;">
-        <h2>Status Widget</h2>
-        <div id="status-widget"
-             style="width: 100px; height: 100px; border-radius: 10px; text-align: center; line-height: 100px; font-weight: bold; color: white; background-color: gray;">
-            Loading...
-        </div>
-    </div>
-</div>
-
-<script>
-    const statusWidget = document.getElementById('status-widget');
-
-    // Function to update the status widget color and behavior
-    async function updateStatusWidget() {
-        try {
-            const response = await fetch('/status_check');
-            const data = await response.json();
-
-            if (data.status) {
-                // Green for true status
-                statusWidget.style.backgroundColor = 'green';
-                statusWidget.textContent = 'Healthy';
-                statusWidget.onclick = null; // Disable clicking
-            } else {
-                // Red for false status
-                statusWidget.style.backgroundColor = 'red';
-                statusWidget.textContent = 'Setup Needed';
-                statusWidget.onclick = async () => {
-                    statusWidget.textContent = 'Setting up...';
-                    try {
-                        const setupResponse = await fetch('/one_time_setup', { method: 'POST' });
-                        const setupData = await setupResponse.json();
-                        if (setupData.message) {
-                            alert(setupData.message);
-                            updateStatusWidget(); // Recheck the status after setup
-                        } else {
-                            alert('Setup failed: ' + setupData.error);
-                        }
-                    } catch (err) {
-                        alert('Error executing setup.');
-                    }
-                };
-            }
-        } catch (err) {
-            statusWidget.style.backgroundColor = 'gray';
-            statusWidget.textContent = 'Error';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Pod Manager{% endblock %}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
         }
-    }
-
-    // Call the update function on page load
-    updateStatusWidget();
-
-    // Deploy button logic
-    document.getElementById('deploy-btn').addEventListener('click', () => {
-        const outputBox = document.getElementById('deploy-output');
-        outputBox.value = ''; // Clear previous output
-
-        const eventSource = new EventSource('/deploy');
-        eventSource.onmessage = (event) => {
-            outputBox.value += event.data + '\\n'; // Append new data to the output box
-            outputBox.scrollTop = outputBox.scrollHeight; // Scroll to the bottom
-        };
-        eventSource.onerror = () => {
-            outputBox.value += '\\n[ERROR] Connection to the server lost.';
-            eventSource.close();
-        };
-    });
-</script>
-{% endblock %}
+        nav {
+            background-color: #4CAF50;
+            padding: 10px 20px;
+            color: white;
+        }
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+        }
+        nav ul li {
+            margin-right: 20px;
+        }
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+        }
+        nav ul li a:hover {
+            text-decoration: underline;
+        }
+        main {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/index">Home</a></li>
+            <li><a href="/status">Status</a></li>
+            <li><a href="/launch">Launch</a></li>
+            <li><a href="/logout">Logout</a></li>
+        </ul>
+    </nav>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

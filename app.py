@@ -1,17 +1,27 @@
-@app.route('/deploy', methods=['GET'])
-def deploy():
-    def generate():
-        # Run the deploy.sh script
-        process = subprocess.Popen(['./deploy.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        try:
-            # Stream stdout line by line
-            for line in iter(process.stdout.readline, ''):
-                if line:
-                    yield f"data: {line.strip()}\\n\\n"
-            process.stdout.close()
-            return_code = process.wait()
-            if return_code != 0:
-                yield f"data: Error occurred: {process.stderr.read()}\\n\\n"
-        except Exception as e:
-            yield f"data: Exception occurred: {str(e)}\\n\\n"
-    return Response(generate(), mimetype='text/event-stream')
+<script>
+    const deployBtn = document.getElementById('deploy-btn');
+    const outputBox = document.getElementById('deploy-output');
+
+    deployBtn.addEventListener('click', () => {
+        outputBox.value = ''; // Clear previous output
+
+        const eventSource = new EventSource('/deploy');
+
+        // Append received messages to the textarea
+        eventSource.onmessage = (event) => {
+            outputBox.value += event.data + '\\n';
+            outputBox.scrollTop = outputBox.scrollHeight; // Scroll to the bottom
+        };
+
+        // Handle errors and attempt to reconnect
+        eventSource.onerror = () => {
+            outputBox.value += '\\n[ERROR] Connection to the server lost. Retrying...';
+            eventSource.close();
+
+            // Retry connection after a delay
+            setTimeout(() => {
+                deployBtn.click();
+            }, 5000);
+        };
+    });
+</script>

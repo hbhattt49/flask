@@ -6,86 +6,105 @@
 <h1>Welcome, {{ username }}</h1>
 <p>You are logged in under the LOB: {{ lob }}</p>
 
-<h2>Status Widget</h2>
+<!-- Deployment Section -->
+<h2>Deployment Logs</h2>
+<div>
+    <button id="deploy-btn" style="margin-bottom: 10px;">Start Deployment</button>
+    <textarea id="output-box" readonly style="width: 100%; height: 300px;"></textarea>
+</div>
+
+<!-- One-Time Setup Widget Section -->
+<h2>One-Time Setup</h2>
 <div id="status-widget"
      style="width: 120px; height: 120px; border-radius: 10px; text-align: center; line-height: 120px; font-weight: bold; color: white; background-color: gray; cursor: pointer;">
     Loading...
 </div>
 
 <script>
+    const deployBtn = document.getElementById('deploy-btn');
+    const outputBox = document.getElementById('output-box');
     const statusWidget = document.getElementById('status-widget');
+    let isSetupInProgress = false; // Flag to prevent multiple clicks
 
-    // Flag to indicate whether a setup process is ongoing
-    let isSetupInProgress = false;
+    // Deployment Section Logic
+    deployBtn.addEventListener('click', () => {
+        outputBox.value = ''; // Clear previous logs
+        const eventSource = new EventSource('/deploy');
 
-    // Function to fetch the current status
+        eventSource.onmessage = (event) => {
+            outputBox.value += event.data + '\\n'; // Append new logs to output box
+            outputBox.scrollTop = outputBox.scrollHeight; // Auto-scroll to bottom
+        };
+
+        eventSource.onerror = () => {
+            outputBox.value += '\\n[ERROR] Connection to the server lost.';
+            eventSource.close();
+        };
+    });
+
+    // One-Time Setup Widget Logic
     async function updateStatusWidget() {
         statusWidget.textContent = 'Loading...';
         statusWidget.style.backgroundColor = 'gray';
         statusWidget.style.cursor = 'default';
 
         try {
-            const response = await fetch('/status_check'); // Fetch the current status from the backend
+            const response = await fetch('/status_check');
             const data = await response.json();
 
             if (data.status) {
-                // If status is healthy
                 statusWidget.textContent = 'Healthy';
                 statusWidget.style.backgroundColor = 'green';
-                statusWidget.style.cursor = 'default'; // Disable pointer cursor if healthy
+                statusWidget.style.cursor = 'default';
                 statusWidget.onclick = null; // Disable click if already healthy
             } else {
-                // If status indicates setup is needed
                 statusWidget.textContent = 'Setup Needed';
                 statusWidget.style.backgroundColor = 'red';
-                statusWidget.style.cursor = 'pointer'; // Enable pointer cursor for setup
-                statusWidget.onclick = handleSetup; // Allow click to initiate setup
+                statusWidget.style.cursor = 'pointer';
+                statusWidget.onclick = handleSetup;
             }
         } catch (err) {
-            // Handle errors (e.g., network issues)
             statusWidget.textContent = 'Error';
             statusWidget.style.backgroundColor = 'gray';
             statusWidget.style.cursor = 'default';
         }
     }
 
-    // Function to handle setup when the widget is clicked
     async function handleSetup() {
-        if (isSetupInProgress) {
-            return; // Prevent multiple clicks during setup
-        }
+        if (isSetupInProgress) return; // Prevent multiple clicks
 
-        isSetupInProgress = true; // Set the flag to true
+        isSetupInProgress = true;
         statusWidget.textContent = 'Setting up...';
         statusWidget.style.backgroundColor = 'orange';
-        statusWidget.style.cursor = 'default'; // Disable pointer cursor
+        statusWidget.style.cursor = 'default';
 
+        outputBox.value = ''; // Clear previous logs
         try {
-            const response = await fetch('/one_time_setup', { method: 'POST' });
-            const data = await response.json();
+            const eventSource = new EventSource('/one_time_setup');
 
-            if (response.ok) {
-                // On successful setup
-                statusWidget.textContent = 'Healthy';
-                statusWidget.style.backgroundColor = 'green';
-                statusWidget.style.cursor = 'default';
-                statusWidget.onclick = null; // Disable further clicks
-                alert(data.message); // Show success message
-            } else {
-                // On failed setup
-                statusWidget.textContent = 'Setup Failed';
-                statusWidget.style.backgroundColor = 'red';
-                statusWidget.style.cursor = 'pointer';
-                alert(`Error: ${data.error}\nDetails: ${data.details}`);
-            }
+            eventSource.onmessage = (event) => {
+                outputBox.value += event.data + '\\n'; // Append setup logs to the output box
+                outputBox.scrollTop = outputBox.scrollHeight; // Auto-scroll to bottom
+            };
+
+            eventSource.onerror = () => {
+                outputBox.value += '\\n[ERROR] Connection to the server lost during setup.';
+                eventSource.close();
+                isSetupInProgress = false; // Allow retry if there's an error
+            };
+
+            eventSource.addEventListener('close', () => {
+                // Ensure the event source is closed after completion
+                eventSource.close();
+                updateStatusWidget(); // Refresh the widget status
+                isSetupInProgress = false;
+            });
         } catch (err) {
-            // Handle network or unexpected errors
+            outputBox.value += 'Error connecting to the server.';
             statusWidget.textContent = 'Error';
             statusWidget.style.backgroundColor = 'gray';
             statusWidget.style.cursor = 'default';
-            alert('Error connecting to the server.');
-        } finally {
-            isSetupInProgress = false; // Reset the flag after setup completes
+            isSetupInProgress = false;
         }
     }
 

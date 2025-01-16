@@ -14,18 +14,18 @@
         <div>
             <button id="deploy-btn" style="margin-bottom: 10px;">Start Deployment</button>
             <button id="run-setup-btn" style="margin-bottom: 10px;">Run Setup</button>
-            <textarea id="output-box" readonly style="width: 100%; height: 300px;"></textarea>
+            <textarea id="output-box" readonly style="width: calc(100% + 150px); height: 300px;"></textarea>
         </div>
     </div>
 
     <!-- Right Section -->
-    <div style="flex: 1; display: flex; flex-direction: column; align-items: center;">
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start;">
         <!-- Widget Section -->
         <div id="status-widget"
              style="width: 120px; height: 120px; border-radius: 10px; text-align: center; line-height: 120px; font-weight: bold; color: white; background-color: gray; margin-bottom: 10px;">
             Loading...
         </div>
-        <h2 style="font-size: 16px; text-align: center; margin: 5px 0;">Widget for One-Time Setup</h2>
+        <h2 style="font-size: 16px; text-align: left; margin: 5px 0;">Widget for One-Time Setup</h2>
     </div>
 </div>
 

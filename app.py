@@ -14,7 +14,7 @@
         <div>
             <button id="deploy-btn" style="margin-bottom: 10px;">Start Deployment</button>
             <button id="run-setup-btn" style="margin-bottom: 10px;">Run Setup</button>
-            <textarea id="output-box" readonly style="width: calc(100% + 150px); height: 300px;"></textarea>
+            <textarea id="output-box" readonly style="width: 600px; height: 300px;"></textarea>
         </div>
     </div>
 

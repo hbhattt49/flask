@@ -3,7 +3,7 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-top: 20px;">
+<div style="display: flex; align-items: flex-start; margin-top: 20px;">
     <!-- Left Section -->
     <div style="flex: 3; margin-right: 20px;">
         <h1>Welcome, {{ username }}</h1>
@@ -14,12 +14,13 @@
         <div>
             <button id="deploy-btn" style="margin-bottom: 10px;">Start Deployment</button>
             <button id="run-setup-btn" style="margin-bottom: 10px;">Run Setup</button>
+            <!-- Fixed-width Text Area -->
             <textarea id="output-box" readonly style="width: 600px; height: 300px;"></textarea>
         </div>
     </div>
 
     <!-- Right Section -->
-    <div style="flex: 1; display: flex; flex-direction: column; align-items: flex-start;">
+    <div style="width: 150px; display: flex; flex-direction: column; align-items: flex-start;">
         <!-- Widget Section -->
         <div id="status-widget"
              style="width: 120px; height: 120px; border-radius: 10px; text-align: center; line-height: 120px; font-weight: bold; color: white; background-color: gray; margin-bottom: 10px;">

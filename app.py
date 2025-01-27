@@ -1,12 +1,22 @@
+
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: myapp-route
+  name: jupyterlab-route
 spec:
-  host: myapp.example.com
-  to:
-    kind: Service
-    name: service-a
-  port:
-    targetPort: 8080
-  path: /api/v1
+  host: example.com  # Replace with your desired domain
+  path: /
+  rules:
+    - path: /user1
+      to:
+        kind: Service
+        name: jupyterlab-user1-service
+        weight: 100
+    - path: /user2
+      to:
+        kind: Service
+        name: jupyterlab-user2-service
+        weight: 100
+  tls:
+    termination: edge  # Use 'passthrough' if you want SSL termination at the backend
+    insecureEdgeTerminationPolicy: Redirect

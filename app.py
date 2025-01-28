@@ -3,40 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic JupyterLab iframe</title>
+    <title>Full-Screen Dynamic iframe</title>
+    <style>
+        /* Ensure the iframe covers the full viewport */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* Prevent scrollbars */
+        }
+        iframe {
+            border: none; /* Remove border for full-screen look */
+        }
+    </style>
 </head>
 <body>
     <iframe
-        id="jupyterlabIframe"
-        src="https://example.com/jupyterlab"  <!-- Replace with your JupyterLab URL -->
-        frameborder="0"
-        style="width: 100%; height: 500px;"> <!-- Default height -->
-    </iframe>
+        id="dynamicIframe"
+        src="https://example.com/jupyterlab" <!-- Replace with your JupyterLab URL -->
+        style="width: 100%; height: 100%;"></iframe>
 
     <script>
-        function resizeIframe() {
-            const iframe = document.getElementById('jupyterlabIframe');
-            
-            // Poll until the content has loaded and height is available
-            const interval = setInterval(() => {
-                try {
-                    const contentHeight = iframe.contentWindow.document.body.scrollHeight;
-
-                    // If a valid height is detected, update the iframe's height
-                    if (contentHeight > 0) {
-                        iframe.style.height = contentHeight + 'px';
-                        clearInterval(interval); // Stop polling once height is set
-                    }
-                } catch (error) {
-                    // Cross-origin restriction handling (if any)
-                    console.error('Error accessing iframe content:', error);
-                }
-            }, 500); // Poll every 500ms
+        // Function to adjust iframe dimensions to the full screen
+        function adjustIframeSize() {
+            const iframe = document.getElementById('dynamicIframe');
+            iframe.style.width = window.innerWidth + 'px'; // Set width to full viewport
+            iframe.style.height = window.innerHeight + 'px'; // Set height to full viewport
         }
 
-        // Trigger resizing once the iframe loads
-        const iframe = document.getElementById('jupyterlabIframe');
-        iframe.onload = resizeIframe;
+        // Adjust the iframe size on page load
+        window.onload = adjustIframeSize;
+
+        // Adjust the iframe size dynamically when the window is resized
+        window.onresize = adjustIframeSize;
     </script>
 </body>
 </html>

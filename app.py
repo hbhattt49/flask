@@ -1,30 +1,22 @@
-# Route for User 1
-apiVersion: route.openshift.io/v1
-kind: Route
-metadata:
-  name: jupyterlab-user1-route
-spec:
-  host: example.com
-  path: /user1
-  to:
-    kind: Service
-    name: jupyterlab-user1-service
-  tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Redirect
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic iframe</title>
+</head>
+<body>
+    <iframe id="dynamicIframe" src="your-content.html" frameborder="0" style="width: 100%;"></iframe>
 
----
-# Route for User 2
-apiVersion: route.openshift.io/v1
-kind: Route
-metadata:
-  name: jupyterlab-user2-route
-spec:
-  host: example.com
-  path: /user2
-  to:
-    kind: Service
-    name: jupyterlab-user2-service
-  tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Redirect
+    <script>
+        function resizeIframe() {
+            const iframe = document.getElementById('dynamicIframe');
+            iframe.style.height = iframe.contentWindow.document.body.scrollHeight + 'px';
+        }
+
+        // Listen for the iframe to load its content
+        const iframe = document.getElementById('dynamicIframe');
+        iframe.onload = resizeIframe;
+    </script>
+</body>
+</html>

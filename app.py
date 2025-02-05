@@ -1,113 +1,50 @@
-{% extends "base.html" %}
+from flask import Flask, render_template, jsonify
+import subprocess
 
-{% block title %}Resource List{% endblock %}
+app = Flask(__name__)
 
-{% block content %}
-<h1>Cluster Resources</h1>
+# Admin Dashboard
+@app.route('/admin')
+def admin_index():
+    return render_template('admin_index.html')
 
-<!-- Pod List with Checkboxes -->
-<h2>Pod List</h2>
-<table border="1">
-    <thead>
-        <tr>
-            <th>Select</th>
-            <th>Pod Name</th>
-            <th>Namespace</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody id="pod-list">
-        <tr><td colspan="4">Loading...</td></tr>
-    </tbody>
-</table>
+# Resources Page
+@app.route('/resources')
+def resources():
+    return render_template('resources.html')
 
-<button id="delete-pods-btn" style="margin-top: 10px;" disabled>Delete Selected Pods</button>
+# Compute Metrics Page
+@app.route('/metrics')
+def metrics():
+    return render_template('metrics.html')
 
-<!-- Route List -->
-<h2>Route List</h2>
-<pre id="route-list">Loading...</pre>
+# Execute OC Commands via Bash Scripts
+def execute_script(script_path):
+    try:
+        result = subprocess.run(["bash", script_path], capture_output=True, text=True)
+        return result.stdout if result.returncode == 0 else f"Error: {result.stderr}"
+    except Exception as e:
+        return str(e)
 
-<!-- Service List -->
-<h2>Service List</h2>
-<pre id="service-list">Loading...</pre>
+@app.route('/get_pods')
+def get_pods():
+    return execute_script("scripts/get_pods.sh")
 
-<!-- PVC List -->
-<h2>PVC List</h2>
-<pre id="pvc-list">Loading...</pre>
+@app.route('/get_routes')
+def get_routes():
+    return execute_script("scripts/get_routes.sh")
 
-<script>
-    async function fetchData(endpoint, elementId, callback = null) {
-        const response = await fetch(endpoint);
-        const data = await response.json();
-        if (callback) {
-            callback(data);
-        } else {
-            document.getElementById(elementId).innerText = data.output;
-        }
-    }
+@app.route('/get_services')
+def get_services():
+    return execute_script("scripts/get_services.sh")
 
-    // Load Pod List with Checkboxes
-    function loadPods(data) {
-        const podList = document.getElementById("pod-list");
-        podList.innerHTML = "";
+@app.route('/get_pvc')
+def get_pvc():
+    return execute_script("scripts/get_pvc.sh")
 
-        if (data.pods.length === 0) {
-            podList.innerHTML = "<tr><td colspan='4'>No Pods Found</td></tr>";
-            return;
-        }
+@app.route('/get_metrics')
+def get_metrics():
+    return execute_script("scripts/get_metrics.sh")
 
-        data.pods.forEach(pod => {
-            const row = document.createElement("tr");
-            row.innerHTML = `
-                <td><input type="checkbox" class="pod-checkbox" value="${pod.name}" data-namespace="${pod.namespace}"></td>
-                <td>${pod.name}</td>
-                <td>${pod.namespace}</td>
-                <td>${pod.status}</td>
-            `;
-            podList.appendChild(row);
-        });
-
-        // Enable Delete Button
-        document.querySelectorAll(".pod-checkbox").forEach(checkbox => {
-            checkbox.addEventListener("change", () => {
-                document.getElementById("delete-pods-btn").disabled = !document.querySelectorAll(".pod-checkbox:checked").length;
-            });
-        });
-    }
-
-    // Delete Selected Pods
-    document.getElementById("delete-pods-btn").addEventListener("click", async () => {
-        const selectedPods = Array.from(document.querySelectorAll(".pod-checkbox:checked"))
-            .map(checkbox => ({
-                name: checkbox.value,
-                namespace: checkbox.dataset.namespace
-            }));
-
-        if (selectedPods.length === 0) {
-            alert("No pods selected.");
-            return;
-        }
-
-        if (!confirm("Are you sure you want to delete the selected pods?")) return;
-
-        const response = await fetch("/delete_pods", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pods: selectedPods })
-        });
-
-        const result = await response.json();
-        alert(result.message);
-
-        // Reload Pod List
-        fetchData("/get_pods", null, loadPods);
-    });
-
-    // Fetch Data
-    fetchData("/get_pods", null, loadPods);
-    fetchData("/get_routes", "route-list");
-    fetchData("/get_services", "service-list");
-    fetchData("/get_pvc", "pvc-list");
-</script>
-
-{% endblock %}
+if __name__ == '__main__':
+    app.run(debug=True)

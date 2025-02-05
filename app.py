@@ -1,32 +1,14 @@
-from flask import Flask, render_template, jsonify, request
-import subprocess
-
-app = Flask(__name__)
-
-# Function to execute a shell script
-def execute_script(script_path, args=[]):
+@app.route('/get_routes')
+def get_routes():
     try:
-        result = subprocess.run(["bash", script_path] + args, capture_output=True, text=True)
-        return result.stdout if result.returncode == 0 else f"Error: {result.stderr}"
-    except Exception as e:
-        return str(e)
-
-# API to get Pods (User-Limited Namespace)
-@app.route('/get_pods')
-def get_pods():
-    try:
-        output = subprocess.run(["bash", "scripts/get_pods.sh"], capture_output=True, text=True)
-        pod_data = []
+        output = subprocess.run(["bash", "scripts/get_routes.sh"], capture_output=True, text=True)
+        route_data = []
 
         for line in output.stdout.split("\n"):
             if line.strip():
                 parts = line.split()
-                pod_data.append({"name": parts[0], "status": parts[1]})  # No namespace info
+                route_data.append({"name": parts[0], "url": parts[1] if len(parts) > 1 else "N/A"})
 
-        return jsonify({"pods": pod_data})
+        return jsonify({"routes": route_data})
     except Exception as e:
         return jsonify({"error": str(e)})
-
-if __name__ == "__main__":
-    app.run(debug=True)
-

@@ -1,17 +1,10 @@
-@app.route('/modify_pvc', methods=['POST'])
-def modify_pvc():
-    data = request.get_json()
-    pvc_name = data.get("pvc_name")
-    new_size = data.get("new_size")
+#!/bin/bash
+PVC_NAME=$1
+NEW_SIZE=$2
 
-    if not pvc_name or not new_size:
-        return jsonify({"message": "PVC name and new size are required"}), 400
+if [ -z "$PVC_NAME" ] || [ -z "$NEW_SIZE" ]; then
+    echo "Error: PVC name and new size required"
+    exit 1
+fi
 
-    try:
-        result = subprocess.run(["bash", "scripts/modify_pvc.sh", pvc_name, new_size], capture_output=True, text=True)
-        if result.returncode == 0:
-            return jsonify({"message": f"PVC {pvc_name} resized to {new_size} successfully."})
-        else:
-            return jsonify({"message": f"Error: {result.stderr}"}), 500
-    except Exception as e:
-        return jsonify({"message": str(e)}), 500
+oc patch pvc "$PVC_NAME" --type='json' -p '[{"op": "replace", "path": "/spec/resources/requests/storage", "value":"'"$NEW_SIZE"'"}]'

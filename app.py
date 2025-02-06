@@ -1,73 +1,70 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resources</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px; /* Spacing between columns */
-        }
-        .column {
-            flex: 1; /* Each column takes equal space */
-            min-width: 300px; /* Ensures responsiveness */
-        }
-        .resource-box {
-            border: 1px solid #ccc;
-            padding: 15px;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-        }
-    </style>
-</head>
-<body>
+from flask import Flask, render_template, jsonify, request
+import subprocess
 
-    <h2>Resources</h2>
+app = Flask(__name__)
 
-    <div class="container">
-        <!-- Left Column: Pods & PVC -->
-        <div class="column">
-            <div class="resource-box">
-                <h3>Pods List</h3>
-                <ul>
-                    <li>Pod 1</li>
-                    <li>Pod 2</li>
-                    <li>Pod 3</li>
-                </ul>
-            </div>
-            <div class="resource-box">
-                <h3>PVC List</h3>
-                <ul>
-                    <li>PVC 1</li>
-                    <li>PVC 2</li>
-                </ul>
-            </div>
-        </div>
+def execute_script(script_path, args=[]):
+    try:
+        result = subprocess.run(["bash", script_path] + args, capture_output=True, text=True)
+        return result.stdout if result.returncode == 0 else f"Error: {result.stderr}"
+    except Exception as e:
+        return str(e)
 
-        <!-- Right Column: Routes & Services -->
-        <div class="column">
-            <div class="resource-box">
-                <h3>Routes List</h3>
-                <ul>
-                    <li>Route 1</li>
-                    <li>Route 2</li>
-                </ul>
-            </div>
-            <div class="resource-box">
-                <h3>Services List</h3>
-                <ul>
-                    <li>Service 1</li>
-                    <li>Service 2</li>
-                </ul>
-            </div>
-        </div>
-    </div>
+@app.route('/resources')
+def resources():
+    return render_template('resources.html')
 
-</body>
-</html>
+@app.route('/get_pods')
+def get_pods():
+    try:
+        output = subprocess.run(["bash", "scripts/get_pods.sh"], capture_output=True, text=True)
+        pod_data = [line.split() for line in output.stdout.split("\n") if line.strip()]
+        return jsonify({"pods": [{"name": pod[0], "status": pod[1]} for pod in pod_data]})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route('/delete_pods', methods=['POST'])
+def delete_pods():
+    data = request.get_json()
+    pods = data.get("items", [])
+
+    if not pods:
+        return jsonify({"message": "No pods selected for deletion."}), 400
+
+    for pod in pods:
+        subprocess.run(["bash", "scripts/delete_pod.sh", pod["name"]])
+
+    return jsonify({"message": "Selected pods deleted successfully."})
+
+@app.route('/get_routes')
+def get_routes():
+    try:
+        output = subprocess.run(["bash", "scripts/get_routes.sh"], capture_output=True, text=True)
+        route_data = [line.split() for line in output.stdout.split("\n") if line.strip()]
+        return jsonify({"routes": [{"name": route[0], "url": route[1]} for route in route_data]})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route('/delete_routes', methods=['POST'])
+def delete_routes():
+    data = request.get_json()
+    routes = data.get("items", [])
+
+    if not routes:
+        return jsonify({"message": "No routes selected for deletion."}), 400
+
+    for route in routes:
+        subprocess.run(["bash", "scripts/delete_route.sh", route["name"]])
+
+    return jsonify({"message": "Selected routes deleted successfully."})
+
+@app.route('/get_services')
+def get_services():
+    return jsonify({"output": execute_script("scripts/get_services.sh")})
+
+@app.route('/get_pvc')
+def get_pvc():
+    return jsonify({"output": execute_script("scripts/get_pvc.sh")})
+
+if __name__ == '__main__':
+    app.run(debug=True)

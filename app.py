@@ -1,16 +1,15 @@
-import paramiko
-
-def run_command_with_password(command, user, host, password):
-    try:
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(hostname=host, username=user, password=password)
-
-        stdin, stdout, stderr = ssh.exec_command(command)
-        output = stdout.read().decode().strip()
-        error = stderr.read().decode().strip()
-        
-        ssh.close()
-        return output, error
-    except Exception as e:
-        return None, str(e)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jupyterlab
+spec:
+  template:
+    spec:
+      containers:
+      - name: jupyterlab
+        image: jupyter/base-notebook
+        args:
+          - "jupyter"
+          - "lab"
+          - "--NotebookApp.allow_origin=https://web-ui.apps.openshift-cluster.com"
+          - "--NotebookApp.tornado_settings={\"headers\": {\"Content-Security-Policy\": \"frame-ancestors 'self' https://web-ui.apps.openshift-cluster.com;\"}}"

@@ -1,29 +1,19 @@
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: jupyterlab
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: jupyterlab
-  template:
-    metadata:
-      labels:
-        app: jupyterlab
-    spec:
-      containers:
-      - name: jupyterlab
-        image: jupyter/base-notebook  # Change this to your JupyterLab image
-        ports:
-          - containerPort: 8888
-        env:
-          - name: JUPYTER_ALLOW_ORIGIN
-            value: "https://web-ui.apps.openshift-cluster.com"
-          - name: JUPYTER_TORNADO_SETTINGS
-            value: '{"headers": {"Content-Security-Policy": "frame-ancestors '\''self'\'' https://web-ui.apps.openshift-cluster.com;"}}'
-        args:
-          - "jupyter"
-          - "lab"
-          - "--NotebookApp.allow_origin=$(JUPYTER_ALLOW_ORIGIN)"
-          - "--NotebookApp.tornado_settings=$(JUPYTER_TORNADO_SETTINGS)"
+#!/bin/bash
+
+# Get all pods ending with "_deploy" and in "Completed" state
+pods_to_delete=$(oc get pods --no-headers | awk '$1 ~ /_deploy$/ && $3 == "Completed" {print $1}')
+
+# Check if there are any pods to delete
+if [[ -z "$pods_to_delete" ]]; then
+    echo "No completed '_deploy' pods found."
+    exit 0
+fi
+
+# Delete each pod
+echo "Deleting completed '_deploy' pods..."
+for pod in $pods_to_delete; do
+    echo "Deleting pod: $pod"
+    oc delete pod $pod
+done
+
+echo "All completed '_deploy' pods deleted successfully!"

@@ -1,19 +1,12 @@
-#!/bin/bash
+Subject: Request for Work from Home During Holi Week
 
-# Get all pods ending with "_deploy" and in "Completed" state
-pods_to_delete=$(oc get pods --no-headers | awk '$1 ~ /_deploy$/ && $3 == "Completed" {print $1}')
+Dear [Manager's Name],
 
-# Check if there are any pods to delete
-if [[ -z "$pods_to_delete" ]]; then
-    echo "No completed '_deploy' pods found."
-    exit 0
-fi
+I hope you are doing well. As Holi is approaching, I would like to request work from home during the Holi week ([mention specific dates]) to manage travel and family commitments while ensuring my work remains uninterrupted.
 
-# Delete each pod
-echo "Deleting completed '_deploy' pods..."
-for pod in $pods_to_delete; do
-    echo "Deleting pod: $pod"
-    oc delete pod $pod
-done
+I will be fully available during work hours, attending meetings, responding to emails, and completing my tasks as per schedule. Please let me know if you need any adjustments or if there are any concerns.
 
-echo "All completed '_deploy' pods deleted successfully!"
+Looking forward to your approval.
+
+Best regards,
+Pushpam Singh

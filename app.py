@@ -10,16 +10,34 @@ def custom_routes():
 @app.route('/get_active_routes')
 def get_active_routes():
     try:
-        result = subprocess.run(["oc", "get", "routes", "--no-headers"], capture_output=True, text=True)
-        routes = []
-        for line in result.stdout.strip().split('\n'):
+        # Get active routes
+        routes_result = subprocess.run(["oc", "get", "routes", "--no-headers"], capture_output=True, text=True)
+        routes_lines = routes_result.stdout.strip().split('\n')
+
+        # Get services and map ports
+        services_result = subprocess.run(["oc", "get", "svc", "--no-headers"], capture_output=True, text=True)
+        service_ports = {}
+        for line in services_result.stdout.strip().split('\n'):
             parts = line.split()
-            if len(parts) >= 3:
+            if len(parts) >= 2:
+                service_name = parts[0]
+                ports = parts[4].split("/")[0]  # Extract port number from PORT/PROTOCOL
+                service_ports[service_name] = ports
+
+        # Build route data
+        routes = []
+        for line in routes_lines:
+            parts = line.split()
+            if len(parts) >= 2:
+                app_name = parts[0]
+                url = parts[1]
+                port = service_ports.get(app_name, "N/A")
                 routes.append({
-                    "application": parts[0],
-                    "url": parts[1],
-                    "port": parts[2]  # adjust based on your cluster's column order
+                    "application": app_name,
+                    "url": url,
+                    "port": port
                 })
+
         return jsonify({"routes": routes})
     except Exception as e:
         return jsonify({"routes": [], "error": str(e)})

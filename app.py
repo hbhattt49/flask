@@ -1,38 +1,45 @@
-#!/bin/bash
+from flask import Flask, render_template, request, jsonify
+import subprocess
 
-# Get routes (host + name + path)
-ROUTES=$(oc get routes --no-headers -o custom-columns="NAME:.metadata.name,HOST:.spec.host,PATH:.spec.path,TO:.spec.to.name")
-if [ $? -ne 0 ]; then
-  echo "Failed to fetch routes" >&2
-  exit 1
-fi
+app = Flask(__name__)
 
-# Get services and build a map of service name → port
-declare -A SERVICE_PORTS
-while read -r line; do
-  svc_name=$(echo "$line" | awk '{print $1}')
-  port_info=$(echo "$line" | awk '{print $5}')
-  port_num=$(echo "$port_info" | cut -d/ -f1)
-  SERVICE_PORTS["$svc_name"]="$port_num"
-done < <(oc get svc --no-headers)
+@app.route('/custom_routes')
+def custom_routes():
+    return render_template('custom_route_page.html')
 
-# Output routes with port as a Python list
-echo "["
+@app.route('/get_active_routes')
+def get_active_routes():
+    try:
+        # Run a shell script to get routes and service info
+        result = subprocess.run(["bash", "scripts/get_routes_and_services.sh"], capture_output=True, text=True)
+        if result.returncode != 0:
+            return jsonify({"routes": [], "error": result.stderr.strip()}), 500
 
-first=true
-echo "$ROUTES" | while read -r name host path to; do
-  [[ -z "$name" || -z "$host" || -z "$to" ]] && continue
+        # Convert stdout to a list of dicts using eval (assuming script outputs JSON-like Python list)
+        routes = eval(result.stdout.strip())
+        return jsonify({"routes": routes})
+    except Exception as e:
+        return jsonify({"routes": [], "error": str(e)}), 500
 
-  full_url="$host$path"
-  port="${SERVICE_PORTS[$to]:-N/A}"
+@app.route('/create_custom_route', methods=['POST'])
+def create_custom_route():
+    data = request.get_json()
+    app_name = data.get("app_name")
+    custom_url = data.get("custom_url")
+    port = data.get("port")
 
-  if [ "$first" = true ]; then
-    first=false
-  else
-    echo ","
-  fi
+    if not app_name or not custom_url or not port:
+        return jsonify({"message": "All fields are required."}), 400
 
-  echo -n "  {\"application\": \"$name\", \"url\": \"$full_url\", \"port\": \"$port\"}"
-done
+    try:
+        # Use a script to execute oc expose
+        result = subprocess.run(["bash", "scripts/create_custom_route.sh", app_name, custom_url, port], capture_output=True, text=True)
+        if result.returncode == 0:
+            return jsonify({"message": f"Route created for {app_name} at {custom_url}"})
+        else:
+            return jsonify({"message": result.stderr.strip()}), 500
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
 
-echo "]"
+if __name__ == '__main__':
+    app.run(debug=True)

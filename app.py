@@ -40,7 +40,7 @@
             <!-- Example row; dynamically generate rows based on your routes data -->
             <tr>
                 <td>example-app</td>
-                <td>example.com</td>
+                <td>http://example.com</td>
                 <td>8080</td>
                 <td><button onclick="deleteRoute('example-app')">Delete</button></td>
             </tr>

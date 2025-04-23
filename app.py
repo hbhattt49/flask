@@ -1,60 +1,33 @@
-def parse_csv_sections(path):
-    sections = []
-    with open(path, 'r') as f:
-        # strip blank lines
-        lines = [l.strip() for l in f if l.strip()]
+Subject: Feedback & Ideas for Our Next Team Outing
 
-    i = 0
-    while i < len(lines):
-        line = lines[i]
+Hi Team,
 
-        # 1) If it's a section header
-        if line.startswith('#'):
-            header = line
-            # decide type by checking keyword
-            is_dict = 'dictionary' in header.lower()
+I hope you all are doing great!
 
-            # prepare a new section
-            section = {
-                'header': header,
-                'type': 'dict' if is_dict else 'non-dict',
-                'lines': []
-            }
-            i += 1
+As the Employee Engagement SPOC, I’d love to hear your feedback on our last team outing — what went well, what could’ve been better, and any suggestions you might have. Your inputs are really important to help us make our future events even more enjoyable and engaging.
 
-            # 2) Collect all following lines until the next header
-            while i < len(lines) and not lines[i].startswith('#'):
-                section['lines'].append(lines[i])
-                i += 1
+Let’s connect for a quick meeting to discuss your thoughts and explore ideas for upcoming team engagement activities.
 
-            sections.append(section)
-        else:
-            # if file starts without a header, skip or handle as you wish
-            i += 1
+Meeting Details:
+Date: [Insert date]
+Time: [Insert time]
+Duration: [e.g., 30 mins]
+Link: [Insert meeting link]
 
-    return sections
+Please come prepared with any feedback or fun ideas you’d like to share!
 
-def format_sections(sections):
-    output = []
-    for sec in sections:
-        output.append(sec['header'])
-        if sec['type'] == 'non-dict':
-            # just key:=value per line
-            for ln in sec['lines']:
-                key, val = ln.split(',', 1)
-                output.append(f"{key}:={val}")
-        else:
-            # dictionary: first line is label, rest are k,v
-            label = sec['lines'][0]
-            kvs = [ln.split(',',1) for ln in sec['lines'][1:]]
-            body = ",".join(f"{k}:{v}" for k, v in kvs)
-            output.append(f"{label}:{{{body}}}")
-        # blank line between sections
-        output.append('')
-    return "\n".join(output).strip()
+Looking forward to hearing from all of you.
 
-if __name__ == "__main__":
-    path_to_csv = 'data.csv'
-    secs = parse_csv_sections(path_to_csv)
-    result = format_sections(secs)
-    print(result)
+Best regards,
+[Your Name]
+Employee Engagement SPOC
+
+Let me know if you want a more casual tone or if you'd like it tailored for a specific platform like Microsoft Teams or Google Meet.
+
+
+
+
+
+
+
+Done

@@ -1,33 +1,17 @@
-Subject: Feedback & Ideas for Our Next Team Outing
+from fastapi import FastAPI, Request, Response
+import httpx
 
-Hi Team,
+app = FastAPI()
+JUPYTER_INTERNAL_URL = "http://jupyterlab.default.svc.cluster.local:8888"
 
-I hope you all are doing great!
-
-As the Employee Engagement SPOC, I’d love to hear your feedback on our last team outing — what went well, what could’ve been better, and any suggestions you might have. Your inputs are really important to help us make our future events even more enjoyable and engaging.
-
-Let’s connect for a quick meeting to discuss your thoughts and explore ideas for upcoming team engagement activities.
-
-Meeting Details:
-Date: [Insert date]
-Time: [Insert time]
-Duration: [e.g., 30 mins]
-Link: [Insert meeting link]
-
-Please come prepared with any feedback or fun ideas you’d like to share!
-
-Looking forward to hearing from all of you.
-
-Best regards,
-[Your Name]
-Employee Engagement SPOC
-
-Let me know if you want a more casual tone or if you'd like it tailored for a specific platform like Microsoft Teams or Google Meet.
-
-
-
-
-
-
-
-Done
+@app.api_route("/jupyterlab/{full_path:path}", methods=["GET", "POST"])
+async def proxy_to_jupyter(full_path: str, request: Request):
+    async with httpx.AsyncClient() as client:
+        proxied_url = f"{JUPYTER_INTERNAL_URL}/{full_path}"
+        response = await client.request(
+            method=request.method,
+            url=proxied_url,
+            headers=request.headers.raw,
+            content=await request.body()
+        )
+        return Response(content=response.content, status_code=response.status_code, headers=dict(response.headers))

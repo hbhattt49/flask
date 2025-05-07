@@ -1,12 +1,33 @@
-Hey [Colleague's Name],
+from notebook.base.handlers import IPythonHandler
+from notebook.utils import url_path_join
+from tornado import web
+from notebook.notebookapp import list_running_servers
+import os
 
-It’s hard to believe it’s time to say goodbye! We just wanted to let you know how much we’ve appreciated everything you brought to the team.
+used_tokens = set()
 
-Your work on the virtual environment setup was a game changer—smooth, efficient, and super reliable. And the Rasa Chatbot? That was a whole new level of smart. You’ve always been the go-to person for innovative ideas, and your passion for exploring new tools really pushed us all to do better.
+class OneTimeTokenHandler(IPythonHandler):
+    def prepare(self):
+        token = self.get_argument('token', default=None)
 
-We’re genuinely going to miss your energy, creativity, and of course, your tech wizardry. Wishing you the best in whatever comes next—you’re going to do amazing things.
+        if not token:
+            raise web.HTTPError(401, "Token required")
 
-Stay in touch and don’t forget us!
+        if token in used_tokens:
+            raise web.HTTPError(403, "Token has already been used")
 
-Cheers,
-[Your Name / Team Name]
+        # Mark token as used
+        used_tokens.add(token)
+
+        # (Optional) Regenerate token or log here
+        print(f"Token '{token}' has been used and is now invalid.")
+
+    def get(self):
+        self.finish("Access granted with one-time token.")
+
+def load_jupyter_server_extension(nbapp):
+    web_app = nbapp.web_app
+    host_pattern = ".*$"
+    route_pattern = url_path_join(web_app.settings["base_url"], "/one-time-auth")
+    web_app.add_handlers(host_pattern, [(route_pattern, OneTimeTokenHandler)])
+    nbapp.log.info("One-time token extension loaded.")

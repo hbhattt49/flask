@@ -1,11 +1,14 @@
-from setuptools import setup, find_packages
+import sys
+import os
 
-setup(
-    name='one_time_token_extension',
-    version='0.1',
-    packages=find_packages(),
-    install_requires=['jupyter_server'],
-    entry_points={
-        'jupyter_serverproxy_servers': []
-    }
-)
+# Add path to extension
+sys.path.append(os.path.expanduser("~/.jupyter/one_time_token_extension"))
+
+c.ServerApp.token = ''  # Disable default token
+c.ServerApp.open_browser = False
+c.ServerApp.allow_origin = '*'
+c.ServerApp.disable_check_xsrf = True
+
+c.ServerApp.jpserver_extensions = {
+    "one_time_token_extension": True
+}

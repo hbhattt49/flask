@@ -5,21 +5,25 @@ USER root
 ENV CODE_SERVER_VERSION=4.89.1
 ENV PASSWORD=yourpassword
 
+# Install tar and shadow-utils
 RUN dnf install -y tar shadow-utils && \
     dnf clean all
 
+# Add non-root user
 RUN useradd -m coder
 
-# Use curl-minimal safely (with user-agent)
 WORKDIR /tmp
-RUN curl -L -A "Mozilla/5.0" \
-    -o code-server.tar.gz \
-    https://github.com/coder/code-server/releases/download/v${CODE_SERVER_VERSION}/code-server-${CODE_SERVER_VERSION}-linux-amd64.tar.gz && \
-    tar -xzf code-server.tar.gz && \
-    mv code-server-${CODE_SERVER_VERSION}-linux-amd64/code-server /usr/local/bin/code-server && \
-    rm -rf code-server*
 
-# Create project folder and fix permissions
+# 👇 Copy full downloaded tar.gz into image
+COPY code-server-${CODE_SERVER_VERSION}-linux-amd64.tar.gz .
+
+# Extract and move entire code-server dir
+RUN tar -xzf code-server-${CODE_SERVER_VERSION}-linux-amd64.tar.gz && \
+    mv code-server-${CODE_SERVER_VERSION}-linux-amd64 /usr/local/lib/code-server && \
+    ln -s /usr/local/lib/code-server/bin/code-server /usr/local/bin/code-server && \
+    rm -f code-server-${CODE_SERVER_VERSION}-linux-amd64.tar.gz
+
+# Setup workspace
 RUN mkdir -p /home/coder/project && \
     chown -R coder:coder /home/coder
 

@@ -1,1 +1,55 @@
-http://ip172-18-0-65-d0eas80l2o9000e6crag-8080.direct.labs.play-with-docker.com/
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  name: code-server
+spec:
+  replicas: 1
+  selector:
+    app: code-server
+  template:
+    metadata:
+      labels:
+        app: code-server
+    spec:
+      containers:
+        - name: code-server
+          image: <your-namespace>/vscode-ubi9:latest  # Replace with your image
+          ports:
+            - containerPort: 8080
+          command:
+            - /usr/local/bin/code-server
+            - "--bind-addr"
+            - "0.0.0.0:8080"
+            - "--auth"
+            - "password"
+            - "--password"
+            - "supersecurepassword"  # 🔐 Replace with your desired password
+          securityContext:
+            runAsUser: 1000
+            runAsNonRoot: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: code-server
+spec:
+  selector:
+    app: code-server
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: code-server
+spec:
+  to:
+    kind: Service
+    name: code-server
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

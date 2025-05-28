@@ -8,62 +8,22 @@ json_data = [
     {"Name": "Charlie", "Age": 35, "Country": "UK"}
 ]
 
-# CSS for better table layout
-st.markdown("""
-    <style>
-    .custom-table {
-        border-collapse: collapse;
-        width: 100%;
-        margin-top: 10px;
-    }
-    .custom-table th, .custom-table td {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-        vertical-align: middle;
-    }
-    .custom-table th {
-        background-color: #f2f2f2;
-        font-weight: bold;
-    }
-    </style>
-""", unsafe_allow_html=True)
+st.title("📋 JSON Table with Inline Action Buttons")
 
-st.title("📋 Beautiful Table with Per-Row Buttons")
+# Table header
+header_cols = st.columns([3, 2, 3, 1])
+header_cols[0].markdown("**Name**")
+header_cols[1].markdown("**Age**")
+header_cols[2].markdown("**Country**")
+header_cols[3].markdown("**Action**")
 
-# Create table header
-table_html = """
-<table class="custom-table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Age</th>
-            <th>Country</th>
-            <th>Run</th>
-        </tr>
-    </thead>
-    <tbody>
-"""
-
-# Create table rows
+# Styled rows with inline buttons
 for i, row in enumerate(json_data):
-    button_placeholder = st.empty()
-    table_html += f"""
-    <tr>
-        <td>{row['Name']}</td>
-        <td>{row['Age']}</td>
-        <td>{row['Country']}</td>
-        <td>{button_placeholder._id}</td>
-    </tr>
-    """
+    row_cols = st.columns([3, 2, 3, 1])
+    row_cols[0].markdown(f"<div style='padding-top: 8px'>{row['Name']}</div>", unsafe_allow_html=True)
+    row_cols[1].markdown(f"<div style='padding-top: 8px'>{row['Age']}</div>", unsafe_allow_html=True)
+    row_cols[2].markdown(f"<div style='padding-top: 8px'>{row['Country']}</div>", unsafe_allow_html=True)
 
-# Close table
-table_html += "</tbody></table>"
-
-# Render the HTML table (without buttons)
-st.markdown(table_html, unsafe_allow_html=True)
-
-# Render real buttons below, mapped by index
-for i, row in enumerate(json_data):
-    if st.button(f"▶️ Run for {row['Name']}", key=f"btn_{i}"):
+    # Inline button
+    if row_cols[3].button("▶️", key=f"run_{i}"):
         st.success(f"✅ Function executed for {row['Name']} (Age: {row['Age']}, Country: {row['Country']})")

@@ -1,38 +1,42 @@
 import streamlit as st
+import pandas as pd
+from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
-# Sample JSON-like data
+# Sample JSON data
 data = [
     {"name": "Alice", "age": 30},
     {"name": "Bob", "age": 25},
     {"name": "Charlie", "age": 35}
 ]
 
-# Python function to call on button click
-def handle_action(name):
-    st.info(f"Function executed for: {name}")
+# Convert to DataFrame
+df = pd.DataFrame(data)
 
-# Title
-st.title("JSON Data with Action Button")
+# Function to call on selection
+def handle_action(selected_row):
+    name = selected_row["name"]
+    st.success(f"Function executed for: {name}")
 
-# Header row
-header1, header2, header3 = st.columns([2, 2, 1])
-with header1:
-    st.markdown("**Name**")
-with header2:
-    st.markdown("**Age**")
-with header3:
-    st.markdown("**Action**")
+st.title("DataFrame with Action Button")
 
-# Display each row with a button
-for i, row in enumerate(data):
-    col1, col2, col3 = st.columns([2, 2, 1])
+# Configure AgGrid with row selection
+gb = GridOptionsBuilder.from_dataframe(df)
+gb.configure_selection('single', use_checkbox=True)  # Enable row selection
+grid_options = gb.build()
 
-    with col1:
-        st.write(row['name'])
+# Render the data table
+grid_response = AgGrid(
+    df,
+    gridOptions=grid_options,
+    update_mode=GridUpdateMode.SELECTION_CHANGED,
+    height=200,
+    fit_columns_on_grid_load=True
+)
 
-    with col2:
-        st.write(row['age'])
+# Extract selected row
+selected = grid_response['selected_rows']
 
-    with col3:
-        if st.button("Run", key=f"run_{i}"):
-            handle_action(row['name'])
+# Show button to trigger action
+if selected:
+    if st.button("Run on selected row"):
+        handle_action(selected[0])

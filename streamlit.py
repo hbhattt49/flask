@@ -10,8 +10,8 @@ data = [
 ]
 df = pd.DataFrame(data)
 
-# Custom JS button per row
-button_renderer = JsCode('''
+# Define a JavaScript cell renderer for the button (escaped properly)
+button_renderer = JsCode("""
     class BtnCellRenderer {
         init(params) {
             this.params = params;
@@ -23,26 +23,25 @@ button_renderer = JsCode('''
             this.eGui.style.padding = '4px 8px';
             this.eGui.style.cursor = 'pointer';
             this.eGui.addEventListener('click', () => {
-                const event = new CustomEvent('runRow', {{ detail: params.data }});
-                window.dispatchEvent(event);
+                alert('Function executed for: ' + params.data.Name + ' (Age: ' + params.data.Age + ')');
             });
         }
         getGui() {
             return this.eGui;
         }
     }
-''')
+""")
 
-# Add dummy "Action" column for button
+# Add dummy Action column
 df["Action"] = ""
 
-# Grid options
+# Grid setup
 gb = GridOptionsBuilder.from_dataframe(df)
 gb.configure_column("Action", header_name="Run", cellRenderer=button_renderer)
 grid_options = gb.build()
 
-# Display grid
-st.title("Styled Table with Buttons (Like st.dataframe)")
+# Display the grid
+st.title("DataFrame with Inline Buttons")
 AgGrid(
     df,
     gridOptions=grid_options,
@@ -50,18 +49,4 @@ AgGrid(
     allow_unsafe_jscode=True,
     height=300,
     fit_columns_on_grid_load=True
-)
-
-# Inject JS to listen for row button click
-st.components.v1.html(
-    """
-    <script>
-    window.addEventListener('runRow', function(e) {
-        const row = e.detail;
-        alert("Function executed for " + row.Name + " (Age: " + row.Age + ")");
-        // Optionally: send row data to Streamlit via URL param or hidden form
-    });
-    </script>
-    """,
-    height=0,
 )

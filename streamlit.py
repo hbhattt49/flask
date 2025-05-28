@@ -1,5 +1,4 @@
 import streamlit as st
-import pandas as pd
 
 # Sample JSON data
 json_data = [
@@ -8,38 +7,35 @@ json_data = [
     {"Name": "Charlie", "Age": 35, "Country": "UK"}
 ]
 
-# Convert to DataFrame
-df = pd.DataFrame(json_data)
-
-# Apply styling and show table
-st.markdown("### 📋 Data Table")
-st.markdown(
-    df.to_html(index=False, classes="styled-table", escape=False),
-    unsafe_allow_html=True
-)
-
-# CSS to style the HTML table
 st.markdown("""
-    <style>
-    .styled-table {
-        border-collapse: collapse;
-        margin: 10px 0;
-        font-size: 16px;
-        width: 100%;
-    }
-    .styled-table th, .styled-table td {
-        border: 1px solid #dddddd;
-        text-align: left;
-        padding: 8px;
-    }
-    .styled-table th {
-        background-color: #f2f2f2;
-    }
-    </style>
+<style>
+.table-row {
+    border-bottom: 1px solid #DDD;
+    padding: 8px 0;
+}
+.table-header {
+    font-weight: bold;
+    border-bottom: 2px solid #AAA;
+    padding-bottom: 6px;
+}
+</style>
 """, unsafe_allow_html=True)
 
-# Row-wise buttons
-st.markdown("### 🧩 Actions")
+st.title("📋 Table with Aligned Per-Row Buttons")
+
+# Header
+header_cols = st.columns([3, 1, 2, 1])
+header_cols[0].markdown("<div class='table-header'>Name</div>", unsafe_allow_html=True)
+header_cols[1].markdown("<div class='table-header'>Age</div>", unsafe_allow_html=True)
+header_cols[2].markdown("<div class='table-header'>Country</div>", unsafe_allow_html=True)
+header_cols[3].markdown("<div class='table-header'>Action</div>", unsafe_allow_html=True)
+
+# Rows
 for i, row in enumerate(json_data):
-    if st.button(f"▶️ Run for {row['Name']}", key=f"run_{i}"):
-        st.success(f"✅ Function executed for {row['Name']} (Age: {row['Age']}, Country: {row['Country']})")
+    cols = st.columns([3, 1, 2, 1])
+    cols[0].markdown(f"<div class='table-row'>{row['Name']}</div>", unsafe_allow_html=True)
+    cols[1].markdown(f"<div class='table-row'>{row['Age']}</div>", unsafe_allow_html=True)
+    cols[2].markdown(f"<div class='table-row'>{row['Country']}</div>", unsafe_allow_html=True)
+    with cols[3]:
+        if st.button("▶️", key=f"run_{i}"):
+            st.success(f"✅ Function executed for {row['Name']} (Age: {row['Age']}, Country: {row['Country']})")

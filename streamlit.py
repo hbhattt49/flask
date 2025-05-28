@@ -10,16 +10,10 @@ data = [
     {"Name": "Charlie", "Age": 35}
 ]
 df = pd.DataFrame(data)
-df["row_index"] = df.index  # add index to know which row was clicked
+df["row_index"] = df.index  # Add index to identify the clicked row
 
-# Python function to call on button click
-def handle_action(row_data):
-    name = row_data.get("Name")
-    age = row_data.get("Age")
-    st.success(f"✅ Function executed for: {name} (Age: {age})")
-
-# JavaScript code to create a Run button
-run_button_renderer = JsCode("""
+# JS button renderer
+button_renderer = JsCode("""
 class BtnCellRenderer {
     init(params) {
         this.params = params;
@@ -31,7 +25,8 @@ class BtnCellRenderer {
         this.eGui.style.padding = '4px 8px';
         this.eGui.style.cursor = 'pointer';
         this.eGui.addEventListener('click', () => {
-            window.parent.postMessage({isStreamlitMessage: true, type: 'FROM_JS', data: params.data.row_index}, '*');
+            window.localStorage.setItem("clicked_row", params.data.row_index);
+            window.dispatchEvent(new Event("storage"));  // Notify change
         });
     }
     getGui() {
@@ -40,30 +35,38 @@ class BtnCellRenderer {
 }
 """)
 
-# AgGrid configuration
+# Add dummy Action column
+df["Run"] = ""
+
+# Build grid options
 gb = GridOptionsBuilder.from_dataframe(df)
-gb.configure_column("Run", header_name="Action", cellRenderer=run_button_renderer)
-gb.configure_column("row_index", hide=True)  # hide internal row index column
+gb.configure_column("Run", header_name="Action", cellRenderer=button_renderer)
+gb.configure_column("row_index", hide=True)
 grid_options = gb.build()
 
-# Add dummy column to trigger button render
-df["Run"] = ""  # this column will show the JS button
-
-# Show table
-st.title("🔥 Per-Row Button Table (Run triggers Python)")
+# Render grid
+st.title("✅ Data Table with Real Buttons (Python Trigger)")
 AgGrid(
     df,
     gridOptions=grid_options,
     update_mode=GridUpdateMode.NO_UPDATE,
     allow_unsafe_jscode=True,
-    height=300,
-    fit_columns_on_grid_load=True
+    fit_columns_on_grid_load=True,
+    height=300
 )
 
-# Get row index from JS via postMessage
-clicked_row_index = streamlit_js_eval(js_expressions="await new Promise(resolve => { window.addEventListener('message', e => { if (e.data && e.data.type === 'FROM_JS') resolve(e.data.data); }); });", key="js_listener")
+# Listen for button click via JS event
+clicked_index = streamlit_js_eval(js_expressions="""
+await new Promise((resolve) => {
+    const handler = () => {
+        const index = localStorage.getItem("clicked_row");
+        resolve(index);
+    };
+    window.addEventListener("storage", handler, { once: true });
+});
+""", key="button-listener")
 
-# If a button was clicked, run Python function
-if clicked_row_index is not None:
-    clicked_row_data = data[clicked_row_index]
-    handle_action(clicked_row_data)
+# Handle Python action
+if clicked_index and clicked_index.isnumeric():
+    row = data[int(clicked_index)]
+    st.success(f"🎯 Python function executed for: {row['Name']} (Age: {row['Age']})")

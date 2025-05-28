@@ -8,22 +8,48 @@ json_data = [
     {"Name": "Charlie", "Age": 35, "Country": "UK"}
 ]
 
-st.title("📋 JSON Table with Inline Action Buttons")
+# Table Styling
+st.markdown("""
+    <style>
+    .grid-row {
+        display: grid;
+        grid-template-columns: 3fr 1fr 2fr 1fr;
+        border-bottom: 1px solid #ddd;
+        padding: 6px 0;
+        align-items: center;
+    }
+    .grid-header {
+        font-weight: bold;
+        background-color: #f0f0f0;
+        border-top: 1px solid #ddd;
+    }
+    .grid-cell {
+        padding-left: 10px;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# Table header
-header_cols = st.columns([3, 2, 3, 1])
-header_cols[0].markdown("**Name**")
-header_cols[1].markdown("**Age**")
-header_cols[2].markdown("**Country**")
-header_cols[3].markdown("**Action**")
+st.title("📋 JSON Grid Table with Per-Row Button")
 
-# Styled rows with inline buttons
+# Header
+st.markdown("""
+<div class="grid-row grid-header">
+    <div class="grid-cell">Name</div>
+    <div class="grid-cell">Age</div>
+    <div class="grid-cell">Country</div>
+    <div class="grid-cell">Action</div>
+</div>
+""", unsafe_allow_html=True)
+
+# Data rows
 for i, row in enumerate(json_data):
-    row_cols = st.columns([3, 2, 3, 1])
-    row_cols[0].markdown(f"<div style='padding-top: 8px'>{row['Name']}</div>", unsafe_allow_html=True)
-    row_cols[1].markdown(f"<div style='padding-top: 8px'>{row['Age']}</div>", unsafe_allow_html=True)
-    row_cols[2].markdown(f"<div style='padding-top: 8px'>{row['Country']}</div>", unsafe_allow_html=True)
-
-    # Inline button
-    if row_cols[3].button("▶️", key=f"run_{i}"):
-        st.success(f"✅ Function executed for {row['Name']} (Age: {row['Age']}, Country: {row['Country']})")
+    cols = st.columns([3, 1, 2, 1])
+    with cols[0]:
+        st.markdown(f"<div class='grid-cell'>{row['Name']}</div>", unsafe_allow_html=True)
+    with cols[1]:
+        st.markdown(f"<div class='grid-cell'>{row['Age']}</div>", unsafe_allow_html=True)
+    with cols[2]:
+        st.markdown(f"<div class='grid-cell'>{row['Country']}</div>", unsafe_allow_html=True)
+    with cols[3]:
+        if st.button("▶️", key=f"run_{i}"):
+            st.success(f"✅ Function executed for {row['Name']} (Age: {row['Age']}, Country: {row['Country']})")

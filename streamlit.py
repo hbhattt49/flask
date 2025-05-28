@@ -10,29 +10,37 @@ data = [
 ]
 df = pd.DataFrame(data)
 
-# Function to run when user clicks Run
+# Function to run
 def handle_action(row_data):
-    st.success(f"Function executed for: {row_data['Name']} (Age: {row_data['Age']})")
+    name = row_data.get("Name", "Unknown")
+    age = row_data.get("Age", "Unknown")
+    st.success(f"✅ Function executed for: {name} (Age: {age})")
 
-# Grid config
+# Configure grid
 gb = GridOptionsBuilder.from_dataframe(df)
-gb.configure_selection('single', use_checkbox=True)  # Enable row selection
+gb.configure_selection('single', use_checkbox=True)
 grid_options = gb.build()
 
-# Display grid
-st.title("Styled Table with Row Action")
+# Render AgGrid
+st.title("Data Table with Per-Row Action")
 response = AgGrid(
     df,
     gridOptions=grid_options,
     update_mode=GridUpdateMode.SELECTION_CHANGED,
-    height=300,
     fit_columns_on_grid_load=True,
+    height=300,
     allow_unsafe_jscode=True
 )
 
-# Check if a row is selected
-selected = response['selected_rows']
-if len(selected) > 0:
-    st.markdown("### Action on Selected Row:")
+# Extract selected rows
+selected_rows = response.get("selected_rows", [])
+
+# Show "Run" only if a row is selected
+if selected_rows:
+    selected_row = selected_rows[0]
+    st.write("Selected Row:", selected_row)
+
     if st.button("Run"):
-        handle_action(selected[0])
+        handle_action(selected_row)
+else:
+    st.info("Please select a row to enable the action.")

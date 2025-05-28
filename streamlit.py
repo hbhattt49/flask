@@ -8,41 +8,38 @@ data = [
     {"Name": "Bob", "Age": 25},
     {"Name": "Charlie", "Age": 35}
 ]
-
 df = pd.DataFrame(data)
 
-# Add a hidden ID to track rows
-df["id"] = df.index
+# Function to call
+def handle_action(row_data):
+    name = row_data.get("Name", "Unknown")
+    age = row_data.get("Age", "Unknown")
+    st.success(f"✅ Function executed for: {name} (Age: {age})")
 
-# Function to be triggered
-def handle_action(row):
-    st.success(f"✅ Function executed for: {row['Name']} (Age: {row['Age']})")
-
-# Use AgGrid with row selection
-gb = GridOptionsBuilder.from_dataframe(df.drop(columns=["id"]))
+# Configure AgGrid
+gb = GridOptionsBuilder.from_dataframe(df)
 gb.configure_selection("single", use_checkbox=True)
 grid_options = gb.build()
 
-st.title("📊 DataFrame-like Table with Row Selection and Button")
-
-# Display the grid
+# Render table
+st.title("📊 Interactive Table with Row Selection")
 response = AgGrid(
-    df.drop(columns=["id"]),
+    df,
     gridOptions=grid_options,
     update_mode=GridUpdateMode.SELECTION_CHANGED,
     fit_columns_on_grid_load=True,
-    allow_unsafe_jscode=True,
-    height=300
+    height=300,
+    allow_unsafe_jscode=True
 )
 
-# If a row is selected, show a Run button
+# Safe selection
 selected_rows = response.get("selected_rows", [])
 
-if len(selected_rows) > 0:
-    selected_row = selected_rows[0]
-    st.write("🔍 Selected Row:", selected_row)
+if isinstance(selected_rows, list) and len(selected_rows) > 0:
+    selected_row = selected_rows[0]  # ✅ already a dict
+    st.write("Selected Row:", selected_row)
 
     if st.button("Run"):
         handle_action(selected_row)
 else:
-    st.info("Select a row to enable the Run button.")
+    st.info("Please select a row from the table.")

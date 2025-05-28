@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-from st_aggrid import AgGrid, GridOptionsBuilder, GridUpdateMode
 
 # Sample data
 data = [
@@ -10,39 +9,20 @@ data = [
 ]
 df = pd.DataFrame(data)
 
-# Dummy column to simulate action button
-df["Action"] = ["Run"] * len(df)
+# Function to handle the Run action
+def handle_action(row):
+    st.success(f"Function executed for: {row['name']} (Age: {row['age']})")
 
-# Function to be called
-def handle_action(row_data):
-    st.success(f"Function executed for: {row_data['name']} (Age: {row_data['age']})")
+# Display the full DataFrame
+st.title("DataFrame View")
+st.dataframe(df, use_container_width=True)
 
-# Build GridOptions with cell click enabled
-gb = GridOptionsBuilder.from_dataframe(df)
-gb.configure_columns(df.columns, editable=False)
-gb.configure_column("Action", header_name="Action", cellStyle={'color': 'white', 'backgroundColor': 'green', 'textAlign': 'center'})
-gb.configure_grid_options(enableCellTextSelection=True)
-grid_options = gb.build()
-
-# Render the table
-st.title("DataFrame with Action Column")
-
-grid_response = AgGrid(
-    df,
-    gridOptions=grid_options,
-    update_mode=GridUpdateMode.MODEL_CHANGED,
-    allow_unsafe_jscode=True,
-    fit_columns_on_grid_load=True,
-    height=300,
-    enable_enterprise_modules=False
-)
-
-# Detect clicks
-selected = grid_response['data']
-clicked = grid_response.get('selected_rows', [])
-
-# Button-like simulation: if last clicked cell is in "Action" column
-if grid_response['selected_rows']:
-    last_row = grid_response['selected_rows'][0]
-    if last_row["Action"] == "Run":
-        handle_action(last_row)
+# Show buttons row by row
+st.markdown("### Actions:")
+for i, row in df.iterrows():
+    cols = st.columns([6, 1])
+    with cols[0]:
+        st.write(f"Row {i+1}: {row.to_dict()}")
+    with cols[1]:
+        if st.button("Run", key=f"run_{i}"):
+            handle_action(row)

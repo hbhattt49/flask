@@ -16,13 +16,14 @@ def handle_action(row_data):
     age = row_data.get("Age", "Unknown")
     st.success(f"✅ Function executed for: {name} (Age: {age})")
 
-# Configure grid
+# Configure AgGrid
 gb = GridOptionsBuilder.from_dataframe(df)
 gb.configure_selection('single', use_checkbox=True)
 grid_options = gb.build()
 
-# Render AgGrid
-st.title("Data Table with Per-Row Action")
+# Display table
+st.title("📋 Data Table with Per-Row Action Button")
+
 response = AgGrid(
     df,
     gridOptions=grid_options,
@@ -32,15 +33,15 @@ response = AgGrid(
     allow_unsafe_jscode=True
 )
 
-# Extract selected rows
+# Extract selected row(s)
 selected_rows = response.get("selected_rows", [])
 
-# Show "Run" only if a row is selected
-if selected_rows:
-    selected_row = selected_rows[0]
+# Ensure selected_rows is a list and non-empty
+if isinstance(selected_rows, list) and len(selected_rows) > 0:
+    selected_row = selected_rows[0]  # First selected row
     st.write("Selected Row:", selected_row)
 
     if st.button("Run"):
         handle_action(selected_row)
 else:
-    st.info("Please select a row to enable the action.")
+    st.info("👉 Please select a row to enable the 'Run' button.")

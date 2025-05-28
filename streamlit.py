@@ -8,22 +8,62 @@ json_data = [
     {"Name": "Charlie", "Age": 35, "Country": "UK"}
 ]
 
-# Title
-st.title("📋 Table with Per-Row Clickable Icon")
+# CSS for better table layout
+st.markdown("""
+    <style>
+    .custom-table {
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 10px;
+    }
+    .custom-table th, .custom-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+        vertical-align: middle;
+    }
+    .custom-table th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
-# Header row
-col1, col2, col3, col4 = st.columns([3, 2, 3, 1])
-col1.markdown("**Name**")
-col2.markdown("**Age**")
-col3.markdown("**Country**")
-col4.markdown("**Run**")
+st.title("📋 Beautiful Table with Per-Row Buttons")
 
-# Render each row with a button/icon
+# Create table header
+table_html = """
+<table class="custom-table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Age</th>
+            <th>Country</th>
+            <th>Run</th>
+        </tr>
+    </thead>
+    <tbody>
+"""
+
+# Create table rows
 for i, row in enumerate(json_data):
-    col1, col2, col3, col4 = st.columns([3, 2, 3, 1])
-    col1.write(row["Name"])
-    col2.write(row["Age"])
-    col3.write(row["Country"])
-    
-    if col4.button("▶️", key=f"run_{i}"):
+    button_placeholder = st.empty()
+    table_html += f"""
+    <tr>
+        <td>{row['Name']}</td>
+        <td>{row['Age']}</td>
+        <td>{row['Country']}</td>
+        <td>{button_placeholder._id}</td>
+    </tr>
+    """
+
+# Close table
+table_html += "</tbody></table>"
+
+# Render the HTML table (without buttons)
+st.markdown(table_html, unsafe_allow_html=True)
+
+# Render real buttons below, mapped by index
+for i, row in enumerate(json_data):
+    if st.button(f"▶️ Run for {row['Name']}", key=f"btn_{i}"):
         st.success(f"✅ Function executed for {row['Name']} (Age: {row['Age']}, Country: {row['Country']})")

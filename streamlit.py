@@ -21,4 +21,25 @@ st.markdown(
 # CSS to style the HTML table
 st.markdown("""
     <style>
-    .styled
+    .styled-table {
+        border-collapse: collapse;
+        margin: 10px 0;
+        font-size: 16px;
+        width: 100%;
+    }
+    .styled-table th, .styled-table td {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+    .styled-table th {
+        background-color: #f2f2f2;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Row-wise buttons
+st.markdown("### 🧩 Actions")
+for i, row in enumerate(json_data):
+    if st.button(f"▶️ Run for {row['Name']}", key=f"run_{i}"):
+        st.success(f"✅ Function executed for {row['Name']} (Age: {row['Age']}, Country: {row['Country']})")

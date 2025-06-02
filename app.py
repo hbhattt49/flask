@@ -1,35 +1,33 @@
-FROM registry.access.redhat.com/ubi9/ubi
+worker_processes 1;
+events { worker_connections 1024; }
 
-USER root
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    sendfile        on;
 
-ENV CODE_SERVER_VERSION=4.89.1
-ENV PASSWORD=yourpassword
+    server {
+        listen 8080;
 
-# Install tar and shadow-utils
-RUN dnf install -y tar shadow-utils && \
-    dnf clean all
+        location /user1/lab/ {
+            proxy_pass         http://localhost:8888/user1/lab/;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
 
-# Add non-root user
-RUN useradd -m coder
+        location /user1/notebook/ {
+            proxy_pass         http://localhost:8888/user1/notebook/;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
 
-WORKDIR /tmp
-
-# 👇 Copy full downloaded tar.gz into image
-COPY code-server-${CODE_SERVER_VERSION}-linux-amd64.tar.gz .
-
-# Extract and move entire code-server dir
-RUN tar -xzf code-server-${CODE_SERVER_VERSION}-linux-amd64.tar.gz && \
-    mv code-server-${CODE_SERVER_VERSION}-linux-amd64 /usr/local/lib/code-server && \
-    ln -s /usr/local/lib/code-server/bin/code-server /usr/local/bin/code-server && \
-    rm -f code-server-${CODE_SERVER_VERSION}-linux-amd64.tar.gz
-
-# Setup workspace
-RUN mkdir -p /home/coder/project && \
-    chown -R coder:coder /home/coder
-
-USER coder
-WORKDIR /home/coder/project
-
-EXPOSE 8080
-
-CMD ["code-server", "--bind-addr", "0.0.0.0:8080", "--auth", "password"]
+        location /user1/code/ {
+            proxy_pass         http://localhost:8081/user1/code/;
+            proxy_set_header   Host $host;
+            proxy_set_header   X-Real-IP $remote_addr;
+            proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+    }
+}

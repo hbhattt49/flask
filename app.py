@@ -1,63 +1,24 @@
-worker_processes 1;
-events {
-    worker_connections 1024;
+# Default: block access
+set $is_valid_request 0;
+
+# Allow if Referer starts with frontend domain
+if ($http_referer ~* "^https://yourfrontend\.com/.*") {
+    set $is_valid_request 1;
 }
 
-http {
-    include       mime.types;
-    default_type  application/octet-stream;
-    sendfile        on;
-
-    # WebSocket support fix
-    map $http_upgrade $connection_upgrade {
-        default upgrade;
-        ''      close;
+# Allow if Referer is empty, but Origin is trusted
+if ($http_referer = "") {
+    if ($http_origin = "https://yourfrontend.com") {
+        set $is_valid_request 1;
     }
+}
 
-    server {
-        listen 8080;
+# ✅ NEW: Ensure Host is expected
+if ($http_host != "user1.backend.com") {
+    set $is_valid_request 0;
+}
 
-        #### 1. JupyterLab at /user1/lab/
-        location /user1/lab/ {
-            proxy_pass http://localhost:8888/user1/lab/;
-
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
-
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        }
-
-        #### 2. code-server at /user1/code/ (with path rewrite)
-        location /user1/code/ {
-            rewrite ^/user1/code/(.*)$ /$1 break;
-            proxy_pass http://localhost:8081/;
-
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
-
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-
-            sub_filter_once off;
-            sub_filter 'href="/' 'href="/user1/code/';
-            sub_filter 'src="/' 'src="/user1/code/';
-            sub_filter 'action="/' 'action="/user1/code/';
-        }
-
-        #### 3. Optional WebSocket fallback for code-server (if using /socket.io/)
-        location /user1/code/socket.io/ {
-            rewrite ^/user1/code/socket.io/(.*)$ /socket.io/$1 break;
-            proxy_pass http://localhost:8081/socket.io/;
-
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
-            proxy_set_header Host $host;
-        }
-    }
+# Final check — block if still invalid
+if ($is_valid_request = 0) {
+    return 403;
 }

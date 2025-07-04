@@ -1,80 +1,41 @@
-worker_processes 1;
+Thanks! Here's the updated Mid-Year Review with your contribution to the Employee Engagement team included:
 
-events {
-    worker_connections 1024;
-}
 
-http {
-    # Required to prevent "could not build map hash" error
-    map_hash_bucket_size 128;
+---
 
-    # 🔐 Allow access only if:
-    # 1. Referer starts with frontend domain AND host matches
-    # 2. OR Referer is empty, Origin is frontend domain, AND host matches
-    map "$http_referer|$http_origin|$http_host" $is_valid_request {
-        default                                                   0;
-        "~^https://yourfrontend\.com/.*|||user1.backend.com"       1;
-        "|https://yourfrontend.com|user1.backend.com"              1;
-    }
+Mid-Year Performance Review – Pushpam Singh
 
-    # For WebSocket connection upgrades
-    map $http_upgrade $connection_upgrade {
-        default upgrade;
-        ''      close;
-    }
+Summary:
+In the first half of the year, I have made notable contributions to both our technical platform and our team culture. From building infrastructure that supports container orchestration to actively engaging in employee development initiatives, my work has consistently aimed at enhancing productivity, collaboration, and innovation.
 
-    server {
-        listen 8080;
+Key Accomplishments:
 
-        # Log access attempts (optional for debugging)
-        log_format debug_format '$remote_addr - Referer:"$http_referer" - Origin:"$http_origin" - Host:"$http_host"';
-        access_log /var/log/nginx/iframe_debug.log debug_format;
+1. Web Framework for Container Orchestration
+Designed and implemented a custom web framework that enables seamless container orchestration. This framework simplifies container lifecycle management and supports our automation goals, driving efficiency across teams.
 
-        # ⛔ Block all invalid requests (not from iframe with proper headers)
-        if ($is_valid_request = 0) {
-            return 403;
-        }
 
-        # ✅ Set CSP so only yourfrontend.com can iframe this
-        add_header Content-Security-Policy "frame-ancestors https://yourfrontend.com" always;
+2. Developer Onboarding with TI Team
+Actively collaborated with the TI team to facilitate container development onboarding. This effort has improved the onboarding experience for new developers and standardized container adoption processes.
 
-        # ---------------- JupyterLab ----------------
-        location /user1/lab/ {
-            proxy_pass http://localhost:8888/user1/lab/;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        }
 
-        # ---------------- code-server ----------------
-        location /user1/code/ {
-            rewrite ^/user1/code/(.*)$ /$1 break;
-            proxy_pass http://localhost:8081/;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+3. Dedicated API Gateway Route for User Containers
+Contributed to the development of a separate API gateway route for spawning user containers dynamically. This work enhances scalability, performance isolation, and aligns with our long-term architecture strategy.
 
-            # Rewrite internal paths (code-server doesn't support base paths)
-            sub_filter_once off;
-            sub_filter 'href="/' 'href="/user1/code/';
-            sub_filter 'src="/' 'src="/user1/code/';
-            sub_filter 'action="/' 'action="/user1/code/';
-        }
 
-        # ---------------- WebSocket (code-server) ----------------
-        location /user1/code/socket.io/ {
-            rewrite ^/user1/code/socket.io/(.*)$ /socket.io/$1 break;
-            proxy_pass http://localhost:8081/socket.io/;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
-            proxy_set_header Host $host;
-        }
-    }
-}
+4. IBM Kubernetes Certification
+Completed the IBM Kubernetes certification, reinforcing my technical foundation and ensuring best practices are applied to our orchestration solutions.
+
+
+5. Employee Engagement & Tech Sessions
+As an active member of the Employee Engagement team, I helped organize and conduct multiple technical and engagement sessions. These initiatives have contributed to building a collaborative work environment, encouraging continuous learning and team bonding.
+
+
+
+Outlook for H2:
+Looking ahead, I plan to expand the web framework’s capabilities, further refine container onboarding workflows, and contribute to strategic initiatives around container security and monitoring. Additionally, I will continue supporting employee engagement by organizing impactful tech talks and interactive sessions that foster team growth and morale.
+
+
+---
+
+Let me know if you'd like this adapted into bullet points for an official HR submission or to match a specific format used by your organization.
+

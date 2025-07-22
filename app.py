@@ -1,16 +1,22 @@
-TLS_CERT=$(oc get secret my-tls-secret -o jsonpath='{.data.tls\.crt}' | base64 -d)
-TLS_KEY=$(oc get secret my-tls-secret -o jsonpath='{.data.tls\.key}' | base64 -d)
-TLS_CA=$(oc get secret my-tls-secret -o jsonpath='{.data.ca\.crt}' | base64 -d)
+# Extract and decode cert components
+TLS_CERT=$(oc get secret my-tls-secret -o jsonpath='{.data.tls\.crt}' | base64 -d | awk '{printf "%s\\n", $0}')
+TLS_KEY=$(oc get secret my-tls-secret -o jsonpath='{.data.tls\.key}' | base64 -d | awk '{printf "%s\\n", $0}')
+TLS_CA=$(oc get secret my-tls-secret -o jsonpath='{.data.ca\.crt}' | base64 -d | awk '{printf "%s\\n", $0}')
 
-oc patch route my-secure-route -n your-namespace --type=merge -p \
-  "{
-    \"spec\": {
-      \"tls\": {
-        \"termination\": \"edge\",
-        \"key\": \"$TLS_KEY\",
-        \"certificate\": \"$TLS_CERT\",
-        \"caCertificate\": \"$TLS_CA\",
-        \"insecureEdgeTerminationPolicy\": \"Redirect\"
-      }
+# Create a JSON patch file
+cat > patch-route.json <<EOF
+{
+  "spec": {
+    "tls": {
+      "termination": "edge",
+      "certificate": "$TLS_CERT",
+      "key": "$TLS_KEY",
+      "caCertificate": "$TLS_CA",
+      "insecureEdgeTerminationPolicy": "Redirect"
     }
-  }"
+  }
+}
+EOF
+
+# Apply the patch
+oc patch route my-secure-route -n your-namespace --type=merge --patch-file=patch-route.json

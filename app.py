@@ -10,3 +10,15 @@
   {"data": {"text": "Pretty decent value for money."}},
   {"data": {"text": "It crashed multiple times, very frustrating experience."}}
 ]
+
+
+
+
+<View>
+  <Labels name="label" toName="text">
+    <Label value="Positive" background="green"/>
+    <Label value="Negative" background="red"/>
+    <Label value="Neutral" background="blue"/>
+  </Labels>
+  <Text name="text" value="$text"/>
+</View>

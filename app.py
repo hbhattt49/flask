@@ -1,3 +1,35 @@
+from label_studio_ml.model import LabelStudioMLBase
+from transformers import pipeline
+
+class SimpleTextClassifier(LabelStudioMLBase):
+    def __init__(self, **kwargs):
+        super(SimpleTextClassifier, self).__init__(**kwargs)
+        self.classifier = pipeline("sentiment-analysis")
+
+    def predict(self, tasks, **kwargs):
+        predictions = []
+        for task in tasks:
+            text = task['data']['text']
+            result = self.classifier(text)[0]
+            label = result['label'].capitalize()  # Convert to match your labels
+
+            predictions.append({
+                "result": [{
+                    "from_name": "label",
+                    "to_name": "text",
+                    "type": "choices",
+                    "value": {
+                        "choices": [label]
+                    }
+                }],
+                "score": result['score']
+            })
+        return predictions
+
+
+
+
+
 [
   {"data": {"text": "The product quality is excellent and exceeded my expectations!"}},
   {"data": {"text": "I am really disappointed with the service I received."}},

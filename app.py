@@ -70,3 +70,20 @@ headers = {
 res = requests.get("http://localhost:8080/api/current-user", headers=headers)
 
 print(res.status_code, res.text)
+
+
+
+
+
+
+
+from label_studio_sdk import Client
+import requests
+
+session = requests.Session()
+session.headers.update({"Authorization": "Token your_actual_api_key"})
+
+ls = Client(url="http://localhost:8080")
+ls.make_request = session.request
+
+print(ls.get_user())

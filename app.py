@@ -54,3 +54,19 @@ class SimpleTextClassifier(LabelStudioMLBase):
   </Labels>
   <Text name="text" value="$text"/>
 </View>
+
+
+
+
+
+
+
+import requests
+
+headers = {
+    "Authorization": "Token your_actual_api_key"
+}
+
+res = requests.get("http://localhost:8080/api/current-user", headers=headers)
+
+print(res.status_code, res.text)

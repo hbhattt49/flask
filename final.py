@@ -1,37 +1,66 @@
-from transformers import BertTokenizer, BertForSequenceClassification, pipeline
+from pathlib import Path
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import torch
 
-MODEL_DIR = "/absolute/path/to/your_model_dir"  # contains tf_model.h5, config.json, tokenizer files
+class MyClassifier:
+    def __init__(self, model_dir_or_name):
+        self.base = Path(model_dir_or_name) if Path(model_dir_or_name).exists() else model_dir_or_name
+        self._ready = False
 
-# 1) Load PyTorch model from TF weights
-model = BertForSequenceClassification.from_pretrained(
-    MODEL_DIR,
-    from_tf=True,
-    low_cpu_mem_usage=False,   # ensures real tensors (avoids meta-tensors)
-)
+    def _lazy_init(self):
+        if self._ready:
+            return
 
-# 2) Load tokenizer and set a safe max length
-tokenizer = BertTokenizer.from_pretrained(MODEL_DIR)
-# Use the model’s max positions (BERT = 512)
-tokenizer.model_max_length = min(getattr(tokenizer, "model_max_length", 512),
-                                 getattr(model.config, "max_position_embeddings", 512))
+        # 1) Load tokenizer (fast) and model (PyTorch only)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.base, use_fast=True)
 
-# 3) Build the pipeline (CPU: device=-1; GPU: device=0)
-self._model = pipeline(
-    task="text-classification",
-    model=model,
-    tokenizer=tokenizer,
-    device=-1,                # set 0 for CUDA:0
-    return_all_scores=True    # get full distribution; pick top later
-)
+        # IMPORTANT: do not use from_tf=True unless your folder ONLY has tf_model.h5
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            self.base,
+            low_cpu_mem_usage=False,     # disable meta init
+            device_map=None              # don’t let accelerate scatter it
+        )
 
+        # 2) Move to device AFTER weights are materialized
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.model.to(self.device).eval()
 
-scores = self._model("Service was great, delivery slow", truncation=True, max_length=tokenizer.model_max_length)
-# scores -> list of {"label": "...", "score": float}
-best = max(scores, key=lambda x: x["score"])
-print(best["label"], best["score"])
+        # 3) Sanity: make sure nothing is on meta
+        if any(p.is_meta for p in self.model.parameters()):
+            raise RuntimeError("Model still on meta device—loading arguments are wrong.")
 
+        # 4) Label mapping
+        cfg = self.model.config
+        self.id2label = getattr(cfg, "id2label", None) or {i: f"LABEL_{i}" for i in range(cfg.num_labels)}
 
-texts = ["Love it", "Hate it", "Meh."]
-batch_scores = self._model(texts, truncation=True, padding=True, max_length=tokenizer.model_max_length)
-# batch_scores -> list of lists
-best_each = [max(s, key=lambda x: x["score"]) for s in batch_scores]
+        self._ready = True
+
+    @torch.inference_mode()
+    def predict(self, texts):
+        self._lazy_init()
+        if isinstance(texts, str):
+            texts = [texts]
+
+        enc = self.tokenizer(
+            texts,
+            padding=True,
+            truncation=True,
+            max_length=self.tokenizer.model_max_length,
+            return_tensors="pt"
+        )
+        enc = {k: v.to(self.device) for k, v in enc.items()}
+
+        logits = self.model(**enc).logits
+        probs = torch.softmax(logits, dim=-1)
+
+        top_ids = probs.argmax(dim=-1).tolist()
+        probs_list = probs.cpu().tolist()
+
+        out = []
+        for i, p in zip(top_ids, probs_list):
+            out.append({
+                "label": self.id2label[int(i)],
+                "score": float(p[i]),
+                "scores": [{"label": self.id2label[j], "score": float(p[j])} for j in range(len(p))]
+            })
+        return out

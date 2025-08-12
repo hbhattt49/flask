@@ -6,6 +6,17 @@ print(m(**x).logits.numpy())
 
 
 
+
+from transformers import AutoTokenizer, TFAutoModelForSequenceClassification
+
+MODEL_DIR = "/path/to/your_model_dir"
+
+tok = AutoTokenizer.from_pretrained(MODEL_DIR, use_fast=True)
+m = TFAutoModelForSequenceClassification.from_pretrained(MODEL_DIR, from_tf=True)
+x = tok("Quick test", return_tensors="tf")
+print(m(**x).logits.numpy())
+
+
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 MODEL_DIR = "/path/to/your_model_dir"

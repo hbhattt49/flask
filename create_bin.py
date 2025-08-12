@@ -7,6 +7,21 @@ print(m(**x).logits.numpy())
 
 
 
+
+from transformers import pipeline
+nlp = pipeline("text-classification", model=MODEL_DIR, tokenizer=MODEL_DIR,
+               framework="tf", model_kwargs={"from_tf": True}, top_k=1)
+
+out = nlp("Service was great, delivery slow")   # -> [{'label': 'Positive', 'score': 0.87}]
+best = out[0]
+print(best["label"], best["score"])
+
+
+
+
+
+
+
 from transformers import AutoTokenizer, TFAutoModelForSequenceClassification
 
 MODEL_DIR = "/path/to/your_model_dir"

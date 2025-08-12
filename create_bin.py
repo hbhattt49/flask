@@ -6,13 +6,18 @@ print(m(**x).logits.numpy())
 
 
 
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
-<View>
-  <Header value="Text Classification"/>
-  <Choices name="label" toName="text" choice="single" showInLine="true">
-    <Choice value="Negative"/>
-    <Choice value="Neutral"/>
-    <Choice value="Positive"/>
-  </Choices>
-  <Text name="text" value="$text"/>
-</View>
+MODEL_DIR = "/path/to/your_model_dir"
+
+# Load TF model into PyTorch
+model = AutoModelForSequenceClassification.from_pretrained(MODEL_DIR, from_tf=True)
+
+# Save as PyTorch model
+model.save_pretrained(MODEL_DIR)
+
+# Ensure tokenizer is saved
+tokenizer = AutoTokenizer.from_pretrained(MODEL_DIR)
+tokenizer.save_pretrained(MODEL_DIR)
+
+print("✅ Conversion complete. pytorch_model.bin is now in", MODEL_DIR)

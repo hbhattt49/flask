@@ -28,7 +28,6 @@ print("✅ Conversion complete. pytorch_model.bin is now in", MODEL_DIR)
 
 
 
-# model.py — TF-only backend for Label Studio BERT classifier
 from typing import List, Dict, Any
 import numpy as np
 import tensorflow as tf
@@ -40,8 +39,7 @@ class BertTextClassifierTF(LabelStudioMLBase):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        # Resolve labels from project config
-        # Expecting a <Choices name="label" ...> block
+        # Extract labels from the project config
         choice_name = None
         for name, info in self.parsed_label_config.items():
             if info.get("type") == "Choices":
@@ -52,31 +50,30 @@ class BertTextClassifierTF(LabelStudioMLBase):
 
         self.labels: List[str] = self.parsed_label_config[choice_name]["labels"]
 
-        # Model dir from kwargs/env set by label-studio-ml (or default)
+        # Model dir provided by LS backend CLI
         self.model_dir = getattr(self, "model_dir", None) or kwargs.get("model_dir") or "./"
 
-        # IMPORTANT: no torch_dtype/device_map here (TF class doesn’t accept them)
+        # Load tokenizer and TF model
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_dir, use_fast=True)
         self.model = TFAutoModelForSequenceClassification.from_pretrained(
             self.model_dir,
-            from_tf=True,       # load tf_model.h5
+            from_tf=True
         )
 
-        # Optional: ensure output order maps to our LS labels if config has id2label
+        # Handle id2label mappings safely
         id2label = getattr(self.model.config, "id2label", None)
         if id2label:
-            # Convert {"0": "NEGATIVE", "1": "POSITIVE"} → ["NEGATIVE","POSITIVE"] order by id
-            ordered = [id2label[str(i)] for i in range(len(id2label))]
-            # If model label names differ from LS labels, keep LS labels but remember mapping
+            try:
+                ordered = [id2label[str(i)] for i in range(len(id2label))]
+            except KeyError:
+                ordered = [id2label[i] for i in range(len(id2label))]
             self.model_label_order = ordered
         else:
-            self.model_label_order = self.labels  # fallback; assumes same order
+            self.model_label_order = self.labels
 
-        # Build a mapping from model label name → LS label index (if names differ)
         self.model_to_ls_idx = {name: i for i, name in enumerate(self.labels)}
 
     def _predict_one(self, text: str) -> Dict[str, Any]:
-        # Tokenize to TF tensors
         toks = self.tokenizer(
             text,
             return_tensors="tf",
@@ -85,26 +82,21 @@ class BertTextClassifierTF(LabelStudioMLBase):
             max_length=512,
         )
         outputs = self.model(**toks)
-        logits = outputs.logits  # [1, num_labels]
-        probs = tf.nn.softmax(logits, axis=-1).numpy().reshape(-1)
+        probs = tf.nn.softmax(outputs.logits, axis=-1).numpy().reshape(-1)
 
-        # Map model label order to LS labels if they differ
         scores = []
         for idx_in_model, label_name in enumerate(self.model_label_order):
-            # If model label names don’t match LS, skip unknowns
             ls_idx = self.model_to_ls_idx.get(label_name, None)
             if ls_idx is not None:
                 scores.append((self.labels[ls_idx], float(probs[idx_in_model])))
 
-        # Pick top-1 as prediction (change if you want multi-label)
         scores.sort(key=lambda x: x[1], reverse=True)
         top_label, top_score = scores[0]
 
-        # Label Studio result format
         return {
             "result": [{
-                "from_name": "label",          # must match your <Choices name="label">
-                "to_name": "text",             # must match your <Text name="text">
+                "from_name": "label",  # must match <Choices name="label">
+                "to_name": "text",     # must match <Text name="text">
                 "type": "choices",
                 "value": {"choices": [top_label]},
                 "score": top_score
@@ -119,4 +111,3 @@ class BertTextClassifierTF(LabelStudioMLBase):
             text = task["data"].get("text", "")
             predictions.append(self._predict_one(text))
         return predictions
-

@@ -16,3 +16,12 @@ Banks face predictable surges — like salary credits, market hours, or festival
 	3.	Decision Engine – Combine ML outputs with business rules to generate scaling and service provisioning actions, including autoscaling hints, routing changes, or spinning up new service pods.
 	4.	Orchestrator Integration – Apply decisions directly to Kubernetes/OpenShift through APIs, updating HPA/KEDA targets, Istio routing, and deploying new services or pods as required.
 	5.	Observability, Fault Tolerance & Compliance – Ensure reliability with DLQ/DLLQ, monitoring (Grafana/Jaeger/Loki), fallback to default HPA policies, and enforce security & compliance using OPA/Gatekeeper.
+
+
+
+
+
+
+1.	Data Ingestion & ML Processing – Collect real-time metrics, logs, traces, and transaction metadata, process them through an ML model to forecast transaction spikes and detect anomalies.
+	2.	Decision & Orchestration – The Decision Engine translates ML outputs into actions like autoscaling, routing updates, or spinning up new banking services (Fraud Detection, KYC, Transaction Processing).
+	3.	Reliability & Compliance – Ensure fault tolerance with DLQ/DLLQ, provide observability through monitoring and logging, and enforce compliance using OPA/Gatekeeper policies.

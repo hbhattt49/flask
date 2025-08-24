@@ -7,3 +7,12 @@ Banks face predictable surges — like salary credits, market hours, or festival
 	4.	ML-driven orchestration enables proactive action — by analyzing historical patterns and real-time telemetry, the system predicts spikes and anomalies, then automatically spins up the right services in advance.
 	5.	Fault tolerance and compliance are non-negotiable — with DLQ/DLLQ, fallback policies, and OPA-based enforcement, the platform ensures resilience, auditability, and adherence to strict banking regulations.
 	6.	Business impact is tangible — optimized cloud costs, seamless transaction experience for customers, and a stronger competitive edge through always-on reliability and faster digital banking services.
+
+
+
+
+	1.	Telemetry & Data Ingestion – Collect CPU, RAM, TPS (transactions per second), latency, logs, traces, and deployment metadata using Prometheus, OpenTelemetry, and Kafka for both real-time and batch data.
+	2.	Feature Extraction & ML Modeling – Transform raw metrics into features and use ML models to forecast transaction load, detect anomalies, and identify which banking services (e.g., Fraud Detection, KYC, Transaction Processing) are required.
+	3.	Decision Engine – Combine ML outputs with business rules to generate scaling and service provisioning actions, including autoscaling hints, routing changes, or spinning up new service pods.
+	4.	Orchestrator Integration – Apply decisions directly to Kubernetes/OpenShift through APIs, updating HPA/KEDA targets, Istio routing, and deploying new services or pods as required.
+	5.	Observability, Fault Tolerance & Compliance – Ensure reliability with DLQ/DLLQ, monitoring (Grafana/Jaeger/Loki), fallback to default HPA policies, and enforce security & compliance using OPA/Gatekeeper.

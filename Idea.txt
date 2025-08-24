@@ -1,10 +1,9 @@
 Banks today face unpredictable transaction surges and increasing demands for reliability and cost efficiency. Traditional autoscaling reacts late and often leads to over-provisioning or downtime. Our ML-driven orchestrator analyzes metrics, logs, and transaction patterns to predict demand in advance. It dynamically scales or spins up critical banking services like Fraud Detection, KYC, and Transaction Processing, ensuring seamless operations and optimized costs.
 
 
-
-	1.	Banks face predictable transaction surges but still rely on costly over-provisioning.
-	2.	Reactive autoscaling is too late to prevent downtime during sudden spikes.
-	3.	Modern banking requires service-aware orchestration, not just pod scaling.
-	4.	Machine learning enables proactive prediction and real-time service provisioning.
-	5.	Fault tolerance and compliance enforcement are essential in financial systems.
-	6.	This approach reduces cloud cost, improves reliability, and enhances customer trust.
+Banks face predictable surges — like salary credits, market hours, or festivals — but without intelligent orchestration, they rely on over-provisioning, which drives up infrastructure costs.
+	2.	Reactive autoscaling isn’t sufficient — scaling only after CPU or memory usage is high often leads to latency, failed transactions, and downtime during sudden demand spikes.
+	3.	Service-aware scaling is critical — beyond just adding pods, banks need the ability to dynamically create or scale services such as Fraud Detection, KYC, and Transaction Processing on demand.
+	4.	ML-driven orchestration enables proactive action — by analyzing historical patterns and real-time telemetry, the system predicts spikes and anomalies, then automatically spins up the right services in advance.
+	5.	Fault tolerance and compliance are non-negotiable — with DLQ/DLLQ, fallback policies, and OPA-based enforcement, the platform ensures resilience, auditability, and adherence to strict banking regulations.
+	6.	Business impact is tangible — optimized cloud costs, seamless transaction experience for customers, and a stronger competitive edge through always-on reliability and faster digital banking services.

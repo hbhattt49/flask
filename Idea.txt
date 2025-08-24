@@ -1,1 +1,10 @@
 Banks today face unpredictable transaction surges and increasing demands for reliability and cost efficiency. Traditional autoscaling reacts late and often leads to over-provisioning or downtime. Our ML-driven orchestrator analyzes metrics, logs, and transaction patterns to predict demand in advance. It dynamically scales or spins up critical banking services like Fraud Detection, KYC, and Transaction Processing, ensuring seamless operations and optimized costs.
+
+
+
+	1.	Banks face predictable transaction surges but still rely on costly over-provisioning.
+	2.	Reactive autoscaling is too late to prevent downtime during sudden spikes.
+	3.	Modern banking requires service-aware orchestration, not just pod scaling.
+	4.	Machine learning enables proactive prediction and real-time service provisioning.
+	5.	Fault tolerance and compliance enforcement are essential in financial systems.
+	6.	This approach reduces cloud cost, improves reliability, and enhances customer trust.

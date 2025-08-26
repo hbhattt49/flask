@@ -71,3 +71,9 @@ DLQ/DLLQ, monitoring, and logs aren’t just for observability — they’re fed
 
 Every scaling/provisioning action is validated against OPA/Gatekeeper policies → ensures compliance, auditability, and regulatory safety (critical in banking).
 
+
+
+
+
+
+What Makes This Unique – Unlike traditional autoscaling, this solution is service-aware and predictive: it can intelligently decide not just how much to scale, but also which new services to create in advance of demand, while continuously learning from telemetry data to improve over time.

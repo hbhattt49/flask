@@ -25,3 +25,9 @@ Banks face predictable surges — like salary credits, market hours, or festival
 1.	Data Ingestion & ML Processing – Collect real-time metrics, logs, traces, and transaction metadata, process them through an ML model to forecast transaction spikes and detect anomalies.
 	2.	Decision & Orchestration – The Decision Engine translates ML outputs into actions like autoscaling, routing updates, or spinning up new banking services (Fraud Detection, KYC, Transaction Processing).
 	3.	Reliability & Compliance – Ensure fault tolerance with DLQ/DLLQ, provide observability through monitoring and logging, and enforce compliance using OPA/Gatekeeper policies.
+
+
+
+
+
+Banks face predictable transaction surges — such as salary credits, market hours, or festivals — and without intelligent orchestration they rely on costly over-provisioning. An ML-driven orchestrator ensures optimized cloud costs, seamless customer experience, and always-on reliability, giving banks a stronger competitive edge.

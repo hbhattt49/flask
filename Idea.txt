@@ -31,3 +31,10 @@ Banks face predictable surges — like salary credits, market hours, or festival
 
 
 Banks face predictable transaction surges — such as salary credits, market hours, or festivals — and without intelligent orchestration they rely on costly over-provisioning. An ML-driven orchestrator ensures optimized cloud costs, seamless customer experience, and always-on reliability, giving banks a stronger competitive edge.
+
+
+
+
+
+
+Leverage DLQ/DLLQ, monitoring, and logging data not only for fault tolerance and compliance (via OPA/Gatekeeper) but also as a feedback loop to retrain and improve the ML model’s accuracy over time.

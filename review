@@ -1,69 +1,35 @@
-apiVersion: apps.openshift.io/v1
-kind: DeploymentConfig
-metadata:
-  name: code-server
-spec:
-  replicas: 1
-  selector:
-    app: code-server
-  template:
-    metadata:
-      labels:
-        app: code-server
-    spec:
-      containers:
-        - name: code-server
-          image: <your-namespace>/vscode-ubi9:latest  # Replace with your image
-          ports:
-            - containerPort: 8080
-          command:
-            - /usr/local/bin/code-server
-            - "--bind-addr"
-            - "0.0.0.0:8080"
-            - "--auth"
-            - "password"
-            - "--password"
-            - "supersecurepassword"  # 🔐 Replace with your desired password
-          securityContext:
-            runAsUser: 1000
-            runAsNonRoot: true
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: code-server
-spec:
-  selector:
-    app: code-server
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080
----
-apiVersion: route.openshift.io/v1
-kind: Route
-metadata:
-  name: code-server
-spec:
-  to:
-    kind: Service
-    name: code-server
-  port:
-    targetPort: 8080
-  tls:
-    termination: edge
-    insecureEdgeTerminationPolicy: Redirect
+#!/bin/bash
+# ===== Spark Setup for Amazon Linux =====
 
+# 1. Update and install Java
+sudo yum update -y
+sudo yum install -y java-17-openjdk
 
+# 2. Define JAVA_HOME dynamically
+export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+echo "export JAVA_HOME=${JAVA_HOME}" | sudo tee -a /etc/profile
 
+# 3. Extract Spark from /tmp
+sudo mkdir -p /opt
+sudo tar -xvzf /tmp/spark-3-75849c8ad0.5.7-bin-hadoop3.tgz -C /opt
+sudo mv /opt/spark-3-75849c8ad0.5.7-bin-hadoop3 /opt/spark
+sudo chown -R ec2-user:ec2-user /opt/spark
 
-Hi Team,
+# 4. Add Spark to PATH
+echo "export SPARK_HOME=/opt/spark" | sudo tee -a /etc/profile
+echo 'export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin' | sudo tee -a /etc/profile
+source /etc/profile
 
-We are pleased to invite you to Q3 team lunch. This will be a wonderful opportunity to connect and spend time together outside of work.
+# 5. Basic Spark config
+cat <<EOF | sudo tee /opt/spark/conf/spark-env.sh
+export JAVA_HOME=${JAVA_HOME}
+export SPARK_MASTER_HOST=\$(hostname -I | awk '{print \$1}')
+export SPARK_LOCAL_IP=\$(hostname -I | awk '{print \$1}')
+export SPARK_MASTER_PORT=7077
+export SPARK_MASTER_WEBUI_PORT=8080
+export SPARK_WORKER_CORES=2
+export SPARK_WORKER_MEMORY=4g
+EOF
 
-Kindly vote for your preference by 28th August, 5:00 PM. 
-
-Looking forward to sharing this time with all of you.
-
-Thanks & Regards,
-DAIT EE Team Gurgaon
+# 6. Start Spark master (you can start workers later)
+sudo -u ec2-user $SPARK_HOME/sbin/start-master.sh

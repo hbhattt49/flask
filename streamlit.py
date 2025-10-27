@@ -1,41 +1,80 @@
-import streamlit as st
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
-# Sample JSON data
-json_data = [
-    {"Name": "Alice", "Age": 30, "Country": "India"},
-    {"Name": "Bob", "Age": 25, "Country": "USA"},
-    {"Name": "Charlie", "Age": 35, "Country": "UK"}
+# ======================================================================
+# FIX: numpy.dtype Pickle issue in PySpark (PickleException workaround)
+# ======================================================================
+import numpy as np
+import copyreg
+
+def _reduce_dtype(dt):
+    """Serialize numpy.dtype safely for PySpark <-> Java (Pyrolite)"""
+    return (np.dtype, (dt.str,))
+
+copyreg.pickle(np.dtype, _reduce_dtype)
+
+# ======================================================================
+# Standard PySpark imports
+# ======================================================================
+from pyspark.sql import SparkSession
+from pyspark.sql.types import StructType, StructField, FloatType, StringType
+from pyspark.sql.functions import col
+import pandas as pd
+
+# ======================================================================
+# Initialize Spark session
+# ======================================================================
+spark = (
+    SparkSession.builder
+    .appName("IrisSample")
+    .getOrCreate()
+)
+
+# ======================================================================
+# Define schema and load dataset
+# ======================================================================
+schema = StructType([
+    StructField("sepal_length", FloatType(), True),
+    StructField("sepal_width", FloatType(), True),
+    StructField("petal_length", FloatType(), True),
+    StructField("petal_width", FloatType(), True),
+    StructField("label_str", StringType(), True)
+])
+
+# Replace this path with your own or use inline sample data
+data = [
+    (5.1, 3.5, 1.4, 0.2, "setosa"),
+    (4.9, 3.0, 1.4, 0.2, "setosa"),
+    (6.2, 3.4, 5.4, 2.3, "virginica"),
+    (5.9, 3.0, 5.1, 1.8, "virginica"),
+    (5.5, 2.3, 4.0, 1.3, "versicolor"),
+    (6.5, 2.8, 4.6, 1.5, "versicolor"),
 ]
 
-st.markdown("""
-<style>
-.table-row {
-    border-bottom: 1px solid #DDD;
-    padding: 8px 0;
-}
-.table-header {
-    font-weight: bold;
-    border-bottom: 2px solid #AAA;
-    padding-bottom: 6px;
-}
-</style>
-""", unsafe_allow_html=True)
+df = spark.createDataFrame(data, schema=schema)
 
-st.title("📋 Table with Aligned Per-Row Buttons")
+# ======================================================================
+# Display schema and basic data
+# ======================================================================
+print("Schema:")
+df.printSchema()
 
-# Header
-header_cols = st.columns([3, 1, 2, 1])
-header_cols[0].markdown("<div class='table-header'>Name</div>", unsafe_allow_html=True)
-header_cols[1].markdown("<div class='table-header'>Age</div>", unsafe_allow_html=True)
-header_cols[2].markdown("<div class='table-header'>Country</div>", unsafe_allow_html=True)
-header_cols[3].markdown("<div class='table-header'>Action</div>", unsafe_allow_html=True)
+print("\nClass distribution:")
+df.groupBy("label_str").count().show()
 
-# Rows
-for i, row in enumerate(json_data):
-    cols = st.columns([3, 1, 2, 1])
-    cols[0].markdown(f"<div class='table-row'>{row['Name']}</div>", unsafe_allow_html=True)
-    cols[1].markdown(f"<div class='table-row'>{row['Age']}</div>", unsafe_allow_html=True)
-    cols[2].markdown(f"<div class='table-row'>{row['Country']}</div>", unsafe_allow_html=True)
-    with cols[3]:
-        if st.button("▶️", key=f"run_{i}"):
-            st.success(f"✅ Function executed for {row['Name']} (Age: {row['Age']}, Country: {row['Country']})")
+# ======================================================================
+# Example transformation
+# ======================================================================
+df_filtered = df.filter(col("sepal_length") > 5.0)
+
+# ======================================================================
+# Convert Spark DataFrame → Pandas DataFrame safely
+# ======================================================================
+pdf = df_filtered.toPandas()
+print("\nConverted Pandas DataFrame:")
+print(pdf.head())
+
+# ======================================================================
+# Stop Spark session
+# ======================================================================
+spark.stop()

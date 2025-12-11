@@ -1,0 +1,56 @@
+Below are 5 existing patents that sit near your space (autoscaling / container management) and how they differ from your “one smart container, many roles + friction score + ephemeral personality” idea.
+1. Autoscaling applications in shared cloud resources – IBM (US 9,547,534 B2)
+What it does (very high level)
+A “tool” that registers trigger conditions (CPU, response time, etc.) and then scales applications up/down in a shared cloud resource environment.
+Scaling = adding or removing resources/instances when thresholds are crossed. 
+https://patents.justia.com/inventor/peter-h-westerink?utm_source=chatgpt.com
+How this is different from your idea
+Focus is on changing the number/size of instances, not changing the behaviour/role of a single running container.
+Uses conditions/thresholds to trigger autoscaling events, not to compute a composite “friction score” that drives role/personality mutation.
+No concept of an ephemeral personality layer that can switch a container between “VIP mode / risk-off mode / batch mode” without restart.
+2. Auto-scaling thresholds in elastic computing environments – IBM (US 10,360,123 B2)
+What it does
+Deals with how to set and adjust auto-scaling thresholds (upper/lower bounds for metrics) that trigger allocation or release of resources in elastic environments. 
+https://patents.google.com/patent/US10360123
+Difference vs yours
+Again about tuning thresholds for scaling infrastructure, not changing application semantics inside one container.
+Threshold logic is per metric (CPU, latency, etc.). Your idea fuses many signals + business priority into a single friction score and then mutates roles inside the same process.
+No notion of mode-specific behaviours (e.g., degrade features, change risk rules) as a first-class construct.
+3. Container based service management – IBM (US 10,691,504 B2)
+What it does
+Provides a way to migrate a service from one container to another while handling in-flight and waiting requests to reduce downtime. 
+https://patents.justia.com/assignee/international-business-machine-corporation?page=863&utm_source=chatgpt.com
+Difference vs yours
+The main idea is moving a service between containers for management/migration.
+Your invention keeps one container alive but changes its role/personality in-place based on friction and business rules.
+This IBM patent is about service migration & continuity, not about dynamic role switching / multi-personality of a single instance.
+4. Dynamic Container Resizing – IBM (US 2024/0320057 A1, application)
+What it does
+Uses telemetry and regression / time-series analysis to predict future resource usage of a container and then resize the container’s resources accordingly (CPU, memory). 
+https://patents.justia.com/patent/20240320057?utm_source=chatgpt.com
+Difference vs yours
+Adjusts resource size of a container; logical behaviour of the app stays the same.
+Your system keeps resources maybe constant but changes the functional role (API vs batch vs risk-off) and feature set based on friction.
+Their decisions optimise resource utilisation; yours explicitly optimises business outcomes + resilience by switching personalities.
+5. Multi-cluster container orchestration – IBM (US 11,861,405 B2)
+What it does
+A manager node collects metrics from many compute nodes; an orchestrator uses this to place/move containerised applications across clusters/nodes for multi-cluster orchestration. 
+https://patents.google.com/patent/US11861405
+Difference vs yours
+Focus is where containers run (across clusters / nodes).
+Your focus is how a given container behaves (role, risk posture, feature level) at runtime.
+Their metrics drive placement & scaling, not internal personality / role mutation or a unified friction score.
+Putting it together – what still looks unique in your concept
+Based only on these public summaries (again: not legal advice, not exhaustive):
+In-place role mutation
+Existing work: scale, resize, migrate, or move containers.
+Yours: keep one container alive and change its operational role (e.g., “Instant-payments VIP mode”, “Risk-off mode”, “Batch mode”) based on a real-time score.
+Single composite “friction score” + business signals
+Existing autoscaling patents use one or more metrics directly for scaling/thresholds.
+You emphasise a single scalar friction index built from technical + business + risk inputs, which then drives role/personality switching.
+Ephemeral personality layer
+I haven’t seen patents using a named “personality layer” that attaches/detaches behaviour bundles (feature flags, risk rules, logging levels) dynamically to a container.
+That “morning API / afternoon batch / night backup” personality idea is your differentiator.
+Banking-specific prioritisation
+These patents are mostly infrastructure-generic.
+You explicitly tie friction + roles to banking business logic (VIP customers, regulatory cut-offs, fraud/risk modes), which strengthens the “technical effect in a specific domain”.

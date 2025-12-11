@@ -1,0 +1,170 @@
+1. Instant Payments / UPI / Faster Payments Switch
+
+Scenario
+
+Container fronts APIs for UPI / IMPS / RTP / FedNow / SEPA Instant etc.
+
+Same container handles: auth, posting, status, refunds, dispute lookups.
+
+
+Friction-driven roles
+
+Normal role – full features: balance hints, offers, spending insights, rich logging.
+
+Surge role (high friction = queue depth/latency ↑)
+
+Temporarily turn off non-essential APIs (spend insights, offers).
+
+Reduce logging, disable expensive cross-system lookups.
+
+Prioritize low-amount / critical bill payments first.
+
+
+Risk-off role (fraud score or anomaly ↑ even if infra fine)
+
+Tighten limits (amount/velocity), require extra auth factors.
+
+Route suspicious payments to an async “review” queue.
+
+
+
+Why this is powerful
+One running container continuously mutates between normal / surge / risk-off personalities using the friction score, instead of needing separate deployments or manual “incident” runbooks.
+
+
+---
+
+2. Card Authorization & Merchant Acquiring Gateway
+
+Scenario
+
+Container is the card auth microservice for POS/e-com traffic.
+
+It talks to scheme networks (Visa, Mastercard, RuPay, etc.), risk engine, ledger.
+
+
+Friction-driven roles
+
+Full-fidelity role – real-time risk models, geo-IP checks, 3DS, loyalty, etc.
+
+Degraded but safe role (network latency ↑ or CPU ↑)
+
+Use cheaper fallback model or rules engine when ML is overloaded.
+
+Skip loyalty/offer enrichment but never skip mandatory compliance checks.
+
+
+Business-priority role
+
+When friction is high, prioritize VIP bins / critical merchants (fuel, health, utilities) over low-priority categories (non-essential retail).
+
+
+
+Why this is powerful
+Instead of failing authorizations when risk models are slow, the same container changes role to a “minimal safe decision engine” and keeps auth uptime & customer experience high.
+
+
+---
+
+3. Digital Channels: Mobile / Internet Banking Session Node
+
+Scenario
+
+Container serves online & mobile banking APIs: login, balances, statements, fund transfer, offers, dashboards.
+
+
+Friction-driven roles
+
+Experience-rich role – full dashboards, widgets, personalisation, marketing tiles.
+
+Connectivity-constrained role (latency, packet loss ↑ or CPU ↑)
+
+Turn into “lite mode” personality:
+
+show only balances & essential payments,
+
+collapse heavy dashboards / charts,
+
+reduce image/content size and analytics calls.
+
+
+
+Reg-first role (reg/reporting friction ↑, e.g., EOD close cut-off approaching)
+
+Temporarily shift capacity from non-essential browsing (offers, history beyond X months) to important flows like KYC, dispute filing, mandate management.
+
+
+
+Why this is powerful
+Same pod can dynamically be “Experience pod”, “Lite pod”, or “Reg-first pod” based on friction, without blue-green or separate stacks.
+
+
+---
+
+4. Real-Time Fraud / Credit Decision Microservice
+
+Scenario
+
+Container hosts APIs for fraud checks or credit approval (cards, personal loans, BNPL).
+
+It uses multiple models, 3rd-party data sources, and rules.
+
+
+Friction-driven roles
+
+High-accuracy role – multi-model ensemble, many external data calls, high CPU.
+
+Fast-decision role (queue depth ↑, SLA breach risk)
+
+Use simpler but conservative model (or scorecard) to avoid SLA penalties.
+
+Approve only “very safe” applications, move marginal cases to async/manual review.
+
+
+Degraded-external role (3rd-party bureaus or KYC providers slow/failing)
+
+Swap personality to:
+
+rely more on internal history / on-us data,
+
+temporarily change limits and offer only lower-risk products.
+
+
+
+
+Why this is powerful
+Rather than an all-or-nothing risk system outage, the container adapts its “risk personality” at runtime to keep decisions flowing but bias toward safety.
+
+
+---
+
+5. Regulatory Reporting + EOD Batch vs. Live Traffic
+
+Scenario
+
+Container participates in EOD closing, reconciliations, regulatory & MIS reports.
+
+The same infra also supports live transactional traffic (APIs, channels).
+
+
+Friction-driven roles
+
+Daytime live-traffic role – focuses on customer APIs, only light background jobs.
+
+Pre-cut-off regulatory role (friction ↑ because reg deadlines are near or backlog of reports ↑)
+
+Container changes to Reg-priority personality:
+
+throttle non-critical channel features,
+
+allocate more CPU/IO to EOD, reconciliations, regulatory extracts,
+
+delay heavy, non-reg analytics/batch jobs.
+
+
+
+Post-EOD cleanup role – after friction drops (reports done), personality flips back and uses spare capacity for historical analytics, backfills, ML feature builds.
+
+
+Why this is powerful
+Regulatory deadlines are hard; instead of over-provisioning separate clusters “just in case”, a single container can swing its role toward compliance when friction says it’s needed.

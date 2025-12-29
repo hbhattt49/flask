@@ -6,7 +6,7 @@
 # ========================================================================
 #
 # Usage: ./bootstrap_spark_cluster_rhel9.sh <MASTER_IP> <WORKER1_IP> <WORKER2_IP>
-# Example: ./bootstrap_spark_cluster_rhel9.sh 172.31.28.208 172.31.19.244 172.31.27.84
+# Example: ./bootstrap_spark_cluster_rhel9.sh 172.31.45.253 172.31.19.244 172.31.27.84
 #
 # ========================================================================
 
@@ -431,7 +431,7 @@ EOF
 <configuration>
   <property>
     <name>fs.defaultFS</name>
-    <value>hdfs://master:9000</value>
+    <value>hdfs://172.31.45.253:9000</value>
   </property>
   <property>
     <name>hadoop.tmp.dir</name>
@@ -462,11 +462,11 @@ EOF
   </property>
   <property>
     <name>dfs.namenode.http-address</name>
-    <value>master:9870</value>
+    <value>172.31.45.253:9870</value>
   </property>
   <property>
     <name>dfs.namenode.secondary.http-address</name>
-    <value>master:9868</value>
+    <value>172.31.45.253:9868</value>
   </property>
   <property>
     <name>dfs.blocksize</name>
@@ -512,23 +512,23 @@ EOF
   </property>
   <property>
     <name>yarn.resourcemanager.hostname</name>
-    <value>master</value>
+    <value>172.31.45.253</value>
   </property>
   <property>
     <name>yarn.resourcemanager.address</name>
-    <value>master:8032</value>
+    <value>172.31.45.253:8032</value>
   </property>
   <property>
     <name>yarn.resourcemanager.scheduler.address</name>
-    <value>master:8030</value>
+    <value>172.31.45.253:8030</value>
   </property>
   <property>
     <name>yarn.resourcemanager.resource-tracker.address</name>
-    <value>master:8031</value>
+    <value>172.31.45.253:8031</value>
   </property>
   <property>
     <name>yarn.resourcemanager.webapp.address</name>
-    <value>master:8088</value>
+    <value>172.31.45.253:8088</value>
   </property>
 
   <property>
@@ -740,7 +740,7 @@ echo "==========================================="
 
 spark-submit \
   --master yarn \
-  --deploy-mode client \
+  --deploy-mode cluster \
   --num-executors 2 \
   --executor-memory 2G \
   --executor-cores 2 \

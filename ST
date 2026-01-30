@@ -1,0 +1,20 @@
+The Simplified Investing 1.0 (PI4) project focuses on building a centralized reporting solution to track key business metrics related to Merrill Edge Self-Directed (MESD) account journeys. The objective is to provide the business with a Tableau dashboard powered by reliable, curated data sourced from Oracle and SDP systems, enabling visibility into client applications, submissions, account openings, funding, and digital channel usage (NBAA app).
+
+Brief Project Summary
+
+
+This project delivers an end-to-end analytics solution by creating a new base table in Oracle to consolidate multiple MESD-related metrics. The curated dataset serves as a single source of truth for a Tableau dashboard that helps stakeholders track application initiation, submission, account opening, funding, and SSO creation across different client segments (Bank-only, Existing clients with linked/unlinked accounts).
+
+Development Done by Developer (Brief)
+Analyzed business requirements and identified required MESD metrics across client types and channels
+
+Designed and created a new base table in Oracle to support multiple reporting metrics
+
+Developed SQL queries, views, and procedures to source and transform data from Oracle and SDP
+
+Ensured data alignment with business definitions and handled dependencies with Business Events team
+
+Enabled the Tableau dashboard to source data from the newly created table
+
+Performed data validation and supported dashboard readiness for business consumption
+
